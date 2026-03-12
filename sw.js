@@ -1,7 +1,7 @@
 // Service Worker — 겸용 펌프 용량 계산서 PWA
-// ★ 업데이트 시 CACHE_VERSION 숫자를 반드시 올려주세요
+// ★ 업데이트 시 CACHE_VERSION 숫자를 올려주세요
 
-const CACHE_VERSION = 'v2.0.0';
+const CACHE_VERSION = 'v2.0.1';
 const CACHE_NAME    = `combo-pump-app-${CACHE_VERSION}`;
 
 const LOCAL_FILES = [
@@ -22,14 +22,12 @@ self.addEventListener('install', (event) => {
     }));
     self.skipWaiting();
 });
-
 self.addEventListener('activate', (event) => {
     event.waitUntil(caches.keys().then((keys) =>
         Promise.all(keys.map((k) => k !== CACHE_NAME ? caches.delete(k) : undefined))
     ));
     self.clients.claim();
 });
-
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     if (event.request.url.includes('fonts.googleapis.com') || event.request.url.includes('fonts.gstatic.com')) {

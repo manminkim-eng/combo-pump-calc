@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러</title>
 
-<!-- ═══ PWA 설정 ═══ -->
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#1e3a5f"/>
 <meta name="description" content="겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러 통합 소방시설 설계"/>
@@ -36,15 +35,8 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
   #dev-stamp{display:block !important;text-align:right;font-size:9px;color:#94a3b8;margin-top:8px;}
 }
 #dev-stamp{display:none !important;}
-.pwa-install-banner{
-  background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);
-  border:1px solid rgba(255,255,255,0.2);
-  animation:slideUp 0.4s ease-out;
-}
-@keyframes slideUp{
-  from{transform:translateY(100%);opacity:0;}
-  to{transform:translateY(0);opacity:1;}
-}
+.pwa-install-banner{background:linear-gradient(135deg,#1e3a5f 0%,#0f172a 100%);border:1px solid rgba(255,255,255,0.2);animation:slideUp .4s ease-out;}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
@@ -280,23 +272,10 @@ function App(){
   const [cPump,setCPump]=useState({pumpDia:150,pumpEff:65,transType:1});
   const ssCp=(k,v)=>setCPump(p=>({...p,[k]:v}));
 
-  /* ═══ PWA 설치 프롬프트 ═══ */
   const[installPrompt,setInstallPrompt]=useState(null);
   const[showInstallBanner,setShowInstallBanner]=useState(false);
-  useEffect(()=>{
-    const h=(e)=>{e.preventDefault();setInstallPrompt(e);
-      if(!window.matchMedia('(display-mode:standalone)').matches) setShowInstallBanner(true);
-    };
-    window.addEventListener('beforeinstallprompt',h);
-    return()=>window.removeEventListener('beforeinstallprompt',h);
-  },[]);
-  const handleInstall=async()=>{
-    if(!installPrompt)return;
-    installPrompt.prompt();
-    const r=await installPrompt.userChoice;
-    if(r.outcome==='accepted')console.log('[PWA] 설치 완료');
-    setInstallPrompt(null);setShowInstallBanner(false);
-  };
+  useEffect(()=>{const h=(e)=>{e.preventDefault();setInstallPrompt(e);if(!window.matchMedia('(display-mode:standalone)').matches)setShowInstallBanner(true);};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h);},[]);
+  const handleInstall=async()=>{if(!installPrompt)return;installPrompt.prompt();const r=await installPrompt.userChoice;if(r.outcome==='accepted')console.log('[PWA] 설치 완료');setInstallPrompt(null);setShowInstallBanner(false);};
 
   /* ── 옥내소화전 계산 ── */
   const H=useMemo(()=>{
@@ -677,6 +656,96 @@ function App(){
               </div>
             </div>
 
+            {/* ※ 배관 및 관부속 마찰손실 수두 상세표 — 옥내소화전 */}
+            <div className="print-section" style={{marginBottom:18}}>
+              <div style={{fontWeight:700,fontSize:11,marginBottom:7,color:"#374151",borderLeft:"3px solid #b91c1c",paddingLeft:10}}>
+                ※ 배관 및 관부속 마찰손실 수두 상세표 【 옥내소화전 】 &nbsp;[ h₂ = {f3(H.F)} m &nbsp;|&nbsp; 배관종류 : {PIPE_CONFIG[hSys.pipeType]?.shortLabel}, C = {PIPE_CONFIG[hSys.pipeType]?.C} ]
+              </div>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
+                <thead>
+                  <tr style={{background:"#b91c1c",color:"white"}}>
+                    {["NO","유량\n(ℓ/min)","관경\n(A)","직관\n(m)","90°Elbow\n수량(상당직관)","45°Elbow\n수량(상당직관)","분류Tee\n수량(상당직관)","직류Tee\n수량(상당직관)","Gate V/V\n수량(상당직관)","Ball V/V\n수량(상당직관)","Angle V/V\n수량(상당직관)","Check V/V\n수량(상당직관)","상당직관\n합계(m)","마찰계수\n(m/100m)","손실수두\n(m)"].map((h,i)=>(
+                      <th key={i} style={{border:BD,padding:"4px 3px",textAlign:"center",whiteSpace:"pre-line",lineHeight:1.3,fontSize:8,fontWeight:700}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {hSegs.map((s,i)=>{
+                    const eq=FITTING_EQ[s.dia]||FITTING_EQ[100];
+                    const counts=[s.e90,s.e45,s.teeB,s.teeS,s.gate,s.ball,s.angle,s.check];
+                    const fl=counts.reduce((sum,cnt,j)=>sum+cnt*eq[j],0);
+                    const tl=(s.len||0)+fl;
+                    const fric=calcFriction(s.flow,s.dia,hSys.pipeType);
+                    const hl=fric*tl/100;
+                    return <tr key={i} style={{background:i%2===0?"white":"#f9fafb"}}>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{i+1}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.flow}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.dia}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.len}</td>
+                      {counts.map((cnt,j)=>(
+                        <td key={j} style={{border:BD,padding:"2px 3px",textAlign:"center",fontSize:9,lineHeight:1.3}}>
+                          <div style={{fontFamily:"'Noto Sans Mono',monospace",fontWeight:700,fontSize:10}}>{cnt}</div>
+                          <div style={{fontFamily:"'Noto Sans Mono',monospace",fontSize:8,color:"#6b7280"}}>({f3(eq[j])})</div>
+                        </td>
+                      ))}
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{f3(fl)}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10,color:"#c2410c",fontWeight:700}}>{f3(fric)}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10,color:"#1d4ed8",fontWeight:700}}>{f3(hl)}</td>
+                    </tr>;
+                  })}
+                  <tr style={{background:"#fef3c7",fontWeight:700}}>
+                    <td colSpan={14} style={{border:BD,padding:"4px 8px",textAlign:"right",color:"#92400e",fontSize:10}}>합계 (h₂)</td>
+                    <td style={{border:BD,padding:"4px 6px",textAlign:"right",fontFamily:"'Noto Sans Mono',monospace",color:"#b45309",fontWeight:900,fontSize:11}}>{f3(H.F)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ※ 배관 및 관부속 마찰손실 수두 상세표 — 스프링클러 */}
+            <div className="print-section" style={{marginBottom:18}}>
+              <div style={{fontWeight:700,fontSize:11,marginBottom:7,color:"#374151",borderLeft:"3px solid #15803d",paddingLeft:10}}>
+                ※ 배관 및 관부속 마찰손실 수두 상세표 【 스프링클러 】 &nbsp;[ h₂ = {f3(S.F)} m &nbsp;|&nbsp; 배관종류 : {PIPE_CONFIG[sSys.pipeType]?.shortLabel}, C = {PIPE_CONFIG[sSys.pipeType]?.C} ]
+              </div>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
+                <thead>
+                  <tr style={{background:"#15803d",color:"white"}}>
+                    {["NO","유량\n(ℓ/min)","관경\n(A)","직관\n(m)","90°Elbow\n수량(상당직관)","45°Elbow\n수량(상당직관)","분류Tee\n수량(상당직관)","직류Tee\n수량(상당직관)","Gate V/V\n수량(상당직관)","Ball V/V\n수량(상당직관)","Angle V/V\n수량(상당직관)","Check V/V\n수량(상당직관)","상당직관\n합계(m)","마찰계수\n(m/100m)","손실수두\n(m)"].map((h,i)=>(
+                      <th key={i} style={{border:BD,padding:"4px 3px",textAlign:"center",whiteSpace:"pre-line",lineHeight:1.3,fontSize:8,fontWeight:700}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sSegs.map((s,i)=>{
+                    const eq=FITTING_EQ[s.dia]||FITTING_EQ[100];
+                    const counts=[s.e90,s.e45,s.teeB,s.teeS,s.gate,s.ball,s.angle,s.check];
+                    const fl=counts.reduce((sum,cnt,j)=>sum+cnt*eq[j],0);
+                    const tl=(s.len||0)+fl;
+                    const fric=calcFriction(s.flow,s.dia,sSys.pipeType);
+                    const hl=fric*tl/100;
+                    return <tr key={i} style={{background:i%2===0?"white":"#f9fafb"}}>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{i+1}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.flow}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.dia}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{s.len}</td>
+                      {counts.map((cnt,j)=>(
+                        <td key={j} style={{border:BD,padding:"2px 3px",textAlign:"center",fontSize:9,lineHeight:1.3}}>
+                          <div style={{fontFamily:"'Noto Sans Mono',monospace",fontWeight:700,fontSize:10}}>{cnt}</div>
+                          <div style={{fontFamily:"'Noto Sans Mono',monospace",fontSize:8,color:"#6b7280"}}>({f3(eq[j])})</div>
+                        </td>
+                      ))}
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10}}>{f3(fl)}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10,color:"#c2410c",fontWeight:700}}>{f3(fric)}</td>
+                      <td style={{border:BD,padding:"3px 4px",textAlign:"center",fontFamily:"'Noto Sans Mono',monospace",fontSize:10,color:"#1d4ed8",fontWeight:700}}>{f3(hl)}</td>
+                    </tr>;
+                  })}
+                  <tr style={{background:"#f0fdf4",fontWeight:700}}>
+                    <td colSpan={14} style={{border:BD,padding:"4px 8px",textAlign:"right",color:"#14532d",fontSize:10}}>합계 (h₂)</td>
+                    <td style={{border:BD,padding:"4px 6px",textAlign:"right",fontFamily:"'Noto Sans Mono',monospace",color:"#15803d",fontWeight:900,fontSize:11}}>{f3(S.F)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             {/* Ⅲ. 겸용 펌프 선정 결과 */}
             <div className="page-break print-section" style={{border:"2px solid #1d4ed8",borderRadius:8,overflow:"hidden",marginBottom:20}}>
               <div style={{background:"#1d4ed8",color:"white",padding:"8px 16px",fontSize:13,fontWeight:700}}>Ⅲ. 겸용 펌프 선정 결과 (NFTC 102 + NFTC 103)</div>
@@ -731,36 +800,15 @@ function App(){
     </div>
   </div>
 
-  {showInstallBanner && (
-    <div style={{position:"fixed",bottom:16,left:16,right:16,zIndex:9999}} className="pwa-install-banner">
-      <div style={{borderRadius:16,padding:16,display:"flex",alignItems:"center",gap:12}}>
-        <img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt="앱"/>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{color:"white",fontSize:13,fontWeight:800}}>홈 화면에 설치하시겠습니까?</div>
-          <div style={{color:"#93c5fd",fontSize:10,fontWeight:600,marginTop:4}}>오프라인에서도 사용 가능합니다</div>
-        </div>
-        <div style={{display:"flex",gap:8,flexShrink:0}}>
-          <button onClick={()=>setShowInstallBanner(false)} style={{color:"rgba(255,255,255,0.6)",fontSize:11,fontWeight:700,padding:"8px 12px",border:"none",background:"transparent",cursor:"pointer",borderRadius:8}}>닫기</button>
-          <button onClick={handleInstall} style={{background:"white",color:"#1e3a5f",fontSize:11,fontWeight:900,padding:"8px 16px",border:"none",borderRadius:8,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>설치</button>
-        </div>
-      </div>
-    </div>
-  )}
+  {showInstallBanner&&<div style={{position:"fixed",bottom:16,left:16,right:16,zIndex:9999}} className="pwa-install-banner"><div style={{borderRadius:16,padding:16,display:"flex",alignItems:"center",gap:12}}><img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt="앱"/><div style={{flex:1,minWidth:0}}><div style={{color:"white",fontSize:13,fontWeight:800}}>홈 화면에 설치하시겠습니까?</div><div style={{color:"#93c5fd",fontSize:10,fontWeight:600,marginTop:4}}>오프라인에서도 사용 가능합니다</div></div><div style={{display:"flex",gap:8,flexShrink:0}}><button onClick={()=>setShowInstallBanner(false)} style={{color:"rgba(255,255,255,0.6)",fontSize:11,fontWeight:700,padding:"8px 12px",border:"none",background:"transparent",cursor:"pointer",borderRadius:8}}>닫기</button><button onClick={handleInstall} style={{background:"white",color:"#1e3a5f",fontSize:11,fontWeight:900,padding:"8px 16px",border:"none",borderRadius:8,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>설치</button></div></div></div>}
 
   </>;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
-
 <script>
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js')
-      .then(r=>console.log('[PWA] SW 등록 완료 — scope:',r.scope))
-      .catch(e=>console.warn('[PWA] SW 등록 실패:',e));
-  });
-}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>console.log('[PWA] SW 등록:',r.scope)).catch(e=>console.warn('[PWA] SW 실패:',e));});}
 </script>
 </body>
 </html>
