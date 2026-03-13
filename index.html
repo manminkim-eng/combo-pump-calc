@@ -6,7 +6,7 @@
 <title>겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#1e3a5f"/>
-<meta name="description" content="겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러 통합 소방시설 설계"/>
+<meta name="description" content="겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러 통합"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="겸용펌프"/>
@@ -24,7 +24,18 @@
 body{font-family:'Noto Sans KR',sans-serif;background:#f1f5f9;-webkit-font-smoothing:antialiased;}
 input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans-serif !important;}
 @media print{
-  @page{size:A4 portrait;margin:14mm 12mm 22mm 14mm;}
+  @page{
+    size:A4 portrait;
+    margin:14mm 12mm 22mm 14mm;
+    @bottom-right{
+      content:"MANMIN-Ver2.0";
+      font-family:'Orbitron',sans-serif;
+      font-size:8pt;
+      font-weight:700;
+      color:#9ca3af;
+      letter-spacing:0.08em;
+    }
+  }
   body{background:white !important;}
   #no-print{display:none !important;}
   .no-print{display:none !important;}
@@ -367,35 +378,38 @@ function App(){
           </div>
         </div>
 
-        {/* 요약 바 */}
-        <div style={{background:"#0f172a",borderRadius:"8px 8px 0 0",padding:"10px 20px",display:"flex",gap:24,flexWrap:"wrap"}}>
-          {[
-            ["옥내소화전 유량",`${H.Clpm} ℓ/min`],
-            ["스프링클러 유량",`${S.Clpm} ℓ/min`],
-            ["겸용 합산 유량",`${CP.Clpm} ℓ/min`],
-            ["옥내소화전 전양정",`${H.J} m`],
-            ["스프링클러 전양정",`${S.J} m`],
-            ["겸용 채택 전양정",`${CP.J} m (${CP.hHead})`],
-            ["겸용 선정 출력",`${CP.Php} HP`],
-          ].map(([l,v])=>(
-            <span key={l} style={{fontSize:12,color:"#94a3b8"}}>
-              {l}: <b style={{color:"#93c5fd",fontFamily:"'Noto Sans Mono',monospace"}}>{v}</b>
-            </span>
+        {/* 탭 — 헤더 하단 */}
+        <div style={{display:"flex",gap:4,paddingTop:4}}>
+          {TABS.map((t,i)=>(
+            <button key={i} onClick={()=>setTab(i)}
+              style={{padding:"11px 24px",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,
+                fontFamily:"'Noto Sans KR',sans-serif",letterSpacing:"0.02em",
+                background:tab===i?TAB_COLORS[i]:"transparent",
+                color:tab===i?"white":"rgba(255,255,255,0.75)",
+                borderBottom:tab===i?`3px solid ${TAB_COLORS[i]}`:"3px solid transparent",
+                transition:"all 0.15s"}}>
+              {t}
+            </button>
           ))}
         </div>
       </div>
     </div>
 
-    {/* ── 탭 ── */}
-    <div className="no-print" style={{maxWidth:1320,margin:"0 auto",padding:"0 24px"}}>
-      <div style={{display:"flex",borderBottom:"2px solid #e5e7eb",background:"white",borderRadius:"0 0 0 0"}}>
-        {TABS.map((t,i)=>(
-          <button key={i} onClick={()=>setTab(i)}
-            style={{padding:"12px 22px",border:"none",cursor:"pointer",fontSize:13,fontWeight:tab===i?800:500,
-              color:tab===i?"white":"#64748b",background:tab===i?TAB_COLORS[i]:"transparent",
-              borderBottom:tab===i?`3px solid ${TAB_COLORS[i]}`:"none",transition:"all 0.2s"}}>
-            {t}
-          </button>
+    {/* ── 요약 바 ── */}
+    <div className="no-print" style={{background:"#0f172a",padding:"10px 0"}}>
+      <div style={{maxWidth:1320,margin:"0 auto",padding:"0 24px",display:"flex",flexWrap:"wrap",gap:20}}>
+        {[
+          ["옥내소화전 유량",`${H.Clpm} ℓ/min`],
+          ["스프링클러 유량",`${S.Clpm} ℓ/min`],
+          ["겸용 합산 유량",`${CP.Clpm} ℓ/min`],
+          ["옥내소화전 전양정",`${H.J} m`],
+          ["스프링클러 전양정",`${S.J} m`],
+          ["겸용 채택 전양정",`${CP.J} m (${CP.hHead})`],
+          ["겸용 선정 출력",`${CP.Php} HP`],
+        ].map(([l,v])=>(
+          <span key={l} style={{fontSize:12,color:"#94a3b8"}}>
+            {l}: <b style={{color:"#93c5fd",fontFamily:"'Noto Sans Mono',monospace"}}>{v}</b>
+          </span>
         ))}
       </div>
     </div>
@@ -488,7 +502,7 @@ function App(){
               <div>
                 <LabelEl>펌프 효율 (η)</LabelEl>
                 <EffInp val={cPump.pumpEff} onChange={v=>ssCp("pumpEff",v)}/>
-                <div style={{fontSize:10,color:"#6b7280",marginTop:4}}>참고: 40A=40% / 65A=55% / 100A=60% / 150A=70%</div>
+                <div style={{fontSize:10,color:"#6b7280",marginTop:4}}>참고: 40A=40% / 50A=45% / 65A=55% / 80A=55% / 100A=60% / 125A=65% / 150A=70%</div>
               </div>
               <div>
                 <LabelEl>동력 전달방식</LabelEl>
@@ -802,13 +816,13 @@ function App(){
     </div>
   </div>
 
-  {showInstallBanner&&<div style={{position:"fixed",bottom:16,left:16,right:16,zIndex:9999}} className="pwa-install-banner"><div style={{borderRadius:16,padding:16,display:"flex",alignItems:"center",gap:12}}><img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt="앱"/><div style={{flex:1,minWidth:0}}><div style={{color:"white",fontSize:13,fontWeight:800}}>홈 화면에 설치하시겠습니까?</div><div style={{color:"#93c5fd",fontSize:10,fontWeight:600,marginTop:4}}>오프라인에서도 사용 가능합니다</div></div><div style={{display:"flex",gap:8,flexShrink:0}}><button onClick={()=>setShowInstallBanner(false)} style={{color:"rgba(255,255,255,0.6)",fontSize:11,fontWeight:700,padding:"8px 12px",border:"none",background:"transparent",cursor:"pointer",borderRadius:8}}>닫기</button><button onClick={handleInstall} style={{background:"white",color:"#1e3a5f",fontSize:11,fontWeight:900,padding:"8px 16px",border:"none",borderRadius:8,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>설치</button></div></div></div>}
+  {showInstallBanner&&<div style={{position:"fixed",bottom:16,left:16,right:16,zIndex:9999}} className="pwa-install-banner"><div style={{borderRadius:16,padding:16,display:"flex",alignItems:"center",gap:12}}><img src="icons/icon-192.png" style={{width:48,height:48,borderRadius:12,flexShrink:0,boxShadow:"0 4px 12px rgba(0,0,0,0.3)"}} alt=""/><div style={{flex:1,minWidth:0}}><div style={{color:"white",fontSize:13,fontWeight:800}}>홈 화면에 설치하시겠습니까?</div><div style={{color:"#93c5fd",fontSize:10,fontWeight:600,marginTop:4}}>오프라인에서도 사용 가능합니다</div></div><div style={{display:"flex",gap:8,flexShrink:0}}><button onClick={()=>setShowInstallBanner(false)} style={{color:"rgba(255,255,255,0.6)",fontSize:11,fontWeight:700,padding:"8px 12px",border:"none",background:"transparent",cursor:"pointer",borderRadius:8}}>닫기</button><button onClick={handleInstall} style={{background:"white",color:"#1e3a5f",fontSize:11,fontWeight:900,padding:"8px 16px",border:"none",borderRadius:8,cursor:"pointer",boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>설치</button></div></div></div>}
 
   </>;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>console.log('[PWA] SW:',r.scope)).catch(e=>console.warn(e));});}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>console.log('[PWA]',r.scope)).catch(e=>console.warn(e));});}</script>
 </body>
 </html>
