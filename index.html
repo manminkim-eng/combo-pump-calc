@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러</title>
-
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#1e3a5f"/>
 <meta name="description" content="겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러 통합 소방시설 설계"/>
@@ -14,7 +13,6 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png"/>
-
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&family=Noto+Sans+Mono:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
@@ -29,6 +27,7 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
   @page{size:A4 portrait;margin:14mm 12mm 22mm 14mm;}
   body{background:white !important;}
   #no-print{display:none !important;}
+  .no-print{display:none !important;}
   #report-zone{box-shadow:none !important;border:none !important;padding:0 !important;margin:0 !important;border-radius:0 !important;}
   .page-break{page-break-before:always;}
   .print-section{break-inside:avoid;page-break-inside:avoid;}
@@ -345,7 +344,7 @@ function App(){
   <div style={{minHeight:"100vh",background:"#f1f5f9",fontFamily:"'Noto Sans KR',sans-serif"}}>
 
     {/* ── 헤더 ── */}
-    <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a5f,#1d4ed8)",color:"white",padding:"20px 0 0"}}>
+    <div className="no-print" style={{background:"linear-gradient(135deg,#0f172a,#1e3a5f,#1d4ed8)",color:"white",padding:"20px 0 0"}}>
       <div style={{maxWidth:1320,margin:"0 auto",padding:"0 24px"}}>
         <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
           <div>
@@ -388,7 +387,7 @@ function App(){
     </div>
 
     {/* ── 탭 ── */}
-    <div style={{maxWidth:1320,margin:"0 auto",padding:"0 24px"}}>
+    <div className="no-print" style={{maxWidth:1320,margin:"0 auto",padding:"0 24px"}}>
       <div style={{display:"flex",borderBottom:"2px solid #e5e7eb",background:"white",borderRadius:"0 0 0 0"}}>
         {TABS.map((t,i)=>(
           <button key={i} onClick={()=>setTab(i)}
@@ -399,11 +398,14 @@ function App(){
           </button>
         ))}
       </div>
+    </div>
 
+    {/* ── 탭 콘텐츠 ── */}
+    <div style={{maxWidth:1320,margin:"0 auto",padding:"0 24px"}}>
       <div style={{paddingTop:20,paddingBottom:40}}>
 
         {/* ════ TAB 0: 옥내소화전 입력 ════ */}
-        {tab===0&&<>
+        {tab===0&&<div className="no-print"><>
           <Box title="▣ 프로젝트 정보" color="#7f1d1d">
             <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:14}}>
               <div><LabelEl>공사명</LabelEl><input value={proj.name} onChange={e=>setProj(p=>({...p,name:e.target.value}))} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:BD,fontSize:13,outline:"none"}}/></div>
@@ -443,10 +445,10 @@ function App(){
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
             MANMIN · Ver-2.0
           </div>
-        </>}
+        </></div>}
 
         {/* ════ TAB 1: 스프링클러 입력 ════ */}
-        {tab===1&&<>
+        {tab===1&&<div className="no-print"><>
           <Box title="Ⅱ. 스프링클러 시스템 파라미터 (NFTC 103)" color="#15803d">
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:14}}>
               <div style={{gridColumn:"1 / -1"}}><LabelEl>A. 기준개수 (용도·구조 선택)</LabelEl>
@@ -470,10 +472,10 @@ function App(){
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
             MANMIN · Ver-2.0
           </div>
-        </>}
+        </></div>}
 
         {/* ════ TAB 2: 겸용 펌프 결과 ════ */}
-        {tab===2&&<>
+        {tab===2&&<div className="no-print"><>
           {/* 겸용 펌프 파라미터 */}
           <Box title="▣ 겸용 펌프 파라미터" color="#1d4ed8">
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:14}}>
@@ -564,11 +566,11 @@ function App(){
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:8,paddingRight:4}}>
             MANMIN · Ver-2.0
           </div>
-        </>}
+        </></div>}
 
         {/* ════ TAB 3: 계산서 출력 ════ */}
         {tab===3&&<>
-          <div id="no-print" style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
+          <div className="no-print" style={{display:"flex",justifyContent:"flex-end",marginBottom:14}}>
             <button onClick={()=>window.print()} style={{padding:"10px 24px",background:"#1e3a5f",color:"white",border:"none",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:13,display:"flex",alignItems:"center",gap:8}}>
               🖨️ 인쇄 / PDF 저장
             </button>
@@ -807,8 +809,6 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
-<script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>console.log('[PWA] SW 등록:',r.scope)).catch(e=>console.warn('[PWA] SW 실패:',e));});}
-</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>console.log('[PWA] SW:',r.scope)).catch(e=>console.warn(e));});}</script>
 </body>
 </html>
