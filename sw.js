@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   소방 펌프 계산서 통합 포털 — Service Worker
-   NFTC 102/103/103A/109 기준 | ENGINEER KIM MANMIN
+   겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러 Service Worker
+   NFPC 102 + NFPC 103 기준 | ENGINEER KIM MANMIN
    전략: Cache-First (로컬 자산) + Network-First (외부 CDN)
    ═══════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME   = 'fire-pump-portal-v1.0';
-const CDN_CACHE    = 'fire-pump-portal-cdn-v1.0';
+const CACHE_NAME   = 'combined-hydrant-sprinkler-v1.0';
+const CDN_CACHE    = 'combined-hydrant-sprinkler-cdn-v1.0';
 const OFFLINE_PAGE = './index.html';
 
 const APP_SHELL = [
@@ -73,6 +73,7 @@ async function networkFirstCDN(request){
   }
 }
 
+/* SKIP_WAITING — type/action 양쪽 호환 */
 self.addEventListener('message',(event)=>{
   if(event.data?.type==='SKIP_WAITING'||event.data?.action==='SKIP_WAITING') self.skipWaiting();
   if(event.data?.action==='CLEAR_CACHE')
@@ -80,7 +81,7 @@ self.addEventListener('message',(event)=>{
 });
 
 self.addEventListener('push',(event)=>{
-  const data=event.data?.json()??{title:'소방계산서 포털',body:'업데이트가 있습니다.'};
+  const data=event.data?.json()??{title:'겸용 펌프 계산서',body:'업데이트가 있습니다.'};
   event.waitUntil(self.registration.showNotification(data.title,{
     body:data.body,icon:'./icons/icon-192.png',badge:'./icons/icon-72.png'
   }));

@@ -1,13 +1,13 @@
 {
-  "name": "소방 펌프 계산서 통합 포털",
-  "short_name": "소방계산서",
-  "description": "NFTC 102/103/103A/109 기준 소방 펌프 용량 계산서 통합 포털 — ENGINEER KIM MANMIN",
+  "name": "겸용 펌프 용량 계산서 — 옥내소화전 + 스프링클러",
+  "short_name": "겸용[옥내+스프]",
+  "description": "NFPC 102 + NFPC 103 기준 겸용 펌프 용량 계산서 — ENGINEER KIM MANMIN",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#0a150a",
-  "theme_color": "#0a150a",
+  "background_color": "#eff6ff",
+  "theme_color": "#1e3a5f",
   "lang": "ko",
   "categories": ["utilities", "productivity"],
   "icons": [
@@ -22,9 +22,9 @@
   ],
   "shortcuts": [
     {
-      "name": "계산서 포털 열기",
-      "short_name": "포털 열기",
-      "description": "소방 펌프 계산서 통합 포털을 즉시 엽니다",
+      "name": "새 계산서 작성",
+      "short_name": "새 계산서",
+      "description": "겸용 펌프 용량 계산서를 새로 작성합니다",
       "url": "./index.html",
       "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
     }
