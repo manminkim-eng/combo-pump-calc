@@ -48,7 +48,7 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
     size:A4 portrait;
     margin:14mm 12mm 22mm 14mm;
     @bottom-right{
-      content:"MANMIN-Ver2.0";
+      content:"MANMIN-Ver3.0";
       font-family:'Orbitron',sans-serif;
       font-size:8pt;
       font-weight:700;
@@ -69,7 +69,7 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
 @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 
 /* ══ 반응형 그리드 ══ */
-.g-proj{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;}
+.g-proj{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:14px;}
 .g-res{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
 .g-res-inner{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .g-4cp{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
@@ -199,11 +199,11 @@ const { useState, useMemo, useEffect } = React;
 ══════════════════════════════════════════════════════════════ */
 const FLOW_PER_HYDRANT = 130;   // 옥내소화전 개당 방사량 (ℓ/min)
 const H_NOZZLE         = 17;    // 옥내소화전 노즐 환산수두 (m)
-const H_WATER_TIME     = 20;    // 옥내소화전 방사시간 (min)
+// H_WATER_TIME: buildingFloor에 따라 20/40/60 동적 적용 (NFTC 102 + NFTC 604)
 
 const FLOW_PER_HEAD    = 80;    // 스프링클러 헤드 개당 방사량 (ℓ/min)
 const S_NOZZLE         = 10;    // 스프링클러 헤드 최소방수압 환산수두 (m)
-const S_WATER_PER      = 1.6;   // 스프링클러 헤드 1개당 수원 (m³)
+// S_WATER_PER: buildingFloor에 따라 1.6/3.2/4.8 동적 적용 (NFTC 103 + NFTC 604)
 
 const PIPE_CONFIG = {
   SCH10:{label:"배관용 탄소강관 KS D3507 (백관)",       shortLabel:"KS D3507",      C:120,
@@ -430,13 +430,13 @@ function FormulaModal({onClose}){
               <div className="fml-sec-title" style={{color:"#b91c1c",borderLeft:"3px solid #b91c1c"}}>Ⅰ-1. 수원 용량 산정 (NFTC 102)</div>
               <div className="fml-card">
                 <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>A. 최대구역 소화전 수</div>
-                <code className="fml-eq" style={{background:"#fef2f2",color:"#b91c1c"}}>A = min(설치개수, 5) &nbsp;[개]</code>
-                <div className="fml-note">NFTC 102 §2.2.1.4 — 최대 5개 제한</div>
+                <code className="fml-eq" style={{background:"#fef2f2",color:"#b91c1c"}}>A = min(설치개수, 기준개수) &nbsp;[일반 2개, 고층 5개 제한]</code>
+                <div className="fml-note">NFTC 102 + NFTC 604 — 일반 건축물(29층↓): 최대 2개 / 고층·초고층(30층↑): 최대 5개</div>
               </div>
               <div className="fml-card">
                 <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>C. 토출량 / D. 수원 용량</div>
-                <code className="fml-eq" style={{background:"#fef2f2",color:"#b91c1c"}}>C = A × 130 [ℓ/min] &nbsp;|&nbsp; D = A × 130 × 20 ÷ 1,000 [m³]</code>
-                <div className="fml-note">개당 방사량 130 ℓ/min × 방사시간 20 min ÷ 1,000 = 수원(m³)</div>
+                <code className="fml-eq" style={{background:"#fef2f2",color:"#b91c1c"}}>C = A × 130 [ℓ/min] &nbsp;|&nbsp; D = A × 130 × 방수시간(20/40/60) ÷ 1,000 [m³]</code>
+                <div className="fml-note">방수시간: 일반(29층↓) 20분 / 고층(30~49층) 40분 / 초고층(50층↑) 60분 (NFTC 604)</div>
               </div>
             </div>
             <div className="fml-sec">
@@ -470,8 +470,8 @@ function FormulaModal({onClose}){
               </div>
               <div className="fml-card">
                 <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:4}}>C. 토출량 / D. 수원 용량</div>
-                <code className="fml-eq" style={{background:"#f0fdf4",color:"#15803d"}}>C = A × 80 [ℓ/min] &nbsp;|&nbsp; D = A × 1.6 [m³]</code>
-                <div className="fml-note">헤드 1개 방사량 80 ℓ/min × 20 min ÷ 1,000 = 1.6 m³ (NFTC 103 §2.1.1.1)</div>
+                <code className="fml-eq" style={{background:"#f0fdf4",color:"#15803d"}}>C = A × 80 [ℓ/min] &nbsp;|&nbsp; D = A × (1.6 / 3.2 / 4.8) [m³]</code>
+                <div className="fml-note">헤드 1개당: 일반 1.6 m³(20분) / 고층 3.2 m³(40분) / 초고층 4.8 m³(60분) — NFTC 103 + NFTC 604</div>
               </div>
             </div>
             <div className="fml-sec">
@@ -562,7 +562,7 @@ function FormulaModal({onClose}){
           </>}
 
           <div style={{textAlign:"center",fontSize:10,color:"#9ca3af",paddingTop:8,borderTop:"1px solid #f1f5f9"}}>
-            NFPC 102 / NFTC 102 + NFPC 103 / NFTC 103 · Hazen-Williams · MANMIN Ver-2.0
+            NFPC 102 / NFTC 102 + NFPC 103 / NFTC 103 · Hazen-Williams · MANMIN Ver-3.0
           </div>
         </div>
       </div>
@@ -600,6 +600,10 @@ function App(){
   const [cPump,setCPump]=useState({pumpDia:150,pumpEff:65,transType:1});
   const ssCp=(k,v)=>setCPump(p=>({...p,[k]:v}));
 
+  /* 건축물 규모(층수) — NFTC 102 + NFTC 103 + NFTC 604 */
+  const [buildingFloor,setBuildingFloor]=useState(1);
+  // 1: 일반(29층↓) 방수 20min / 2: 고층(30~49층) 40min / 3: 초고층(50층↑) 60min
+
   const[installPrompt,setInstallPrompt]=useState(null);
   const[showInstallBanner,setShowInstallBanner]=useState(false);
   useEffect(()=>{const h=(e)=>{e.preventDefault();setInstallPrompt(e);if(!window.matchMedia('(display-mode:standalone)').matches)setShowInstallBanner(true);};window.addEventListener('beforeinstallprompt',h);return()=>window.removeEventListener('beforeinstallprompt',h);},[]);
@@ -636,9 +640,12 @@ function App(){
 
   /* ── 옥내소화전 계산 ── */
   const H=useMemo(()=>{
-    const A=Math.min(5,Math.max(1,hSys.hydrants|0));
+    // NFTC 102 + NFTC 604: 층수에 따른 기준개수·방수시간 동적 적용
+    const hMaxCount = buildingFloor===1 ? 2 : 5;          // 일반 2개 / 고층·초고층 5개
+    const hWaterTime = buildingFloor===1 ? 20 : buildingFloor===2 ? 40 : 60; // 20/40/60분
+    const A=Math.min(hMaxCount,Math.max(1,hSys.hydrants|0));
     const Clpm=A*FLOW_PER_HYDRANT;
-    const D=Clpm*H_WATER_TIME/1000;
+    const D=Clpm*hWaterTime/1000;
     let F=0;
     hSegs.forEach(s=>{
       const eq=FITTING_EQ[s.dia]||FITTING_EQ[100];
@@ -652,15 +659,17 @@ function App(){
     const sub=E+F+G+H_NOZZLE;
     const I=sub*0.1;
     const J=Math.ceil(sub+I);
-    return {A,Clpm,D,E,F,G,I,J,hose};
-  },[hSys,hSegs]);
+    return {A,Clpm,D,E,F,G,I,J,hose,hMaxCount,hWaterTime};
+  },[hSys,hSegs,buildingFloor]);
 
   /* ── 스프링클러 계산 ── */
   const S=useMemo(()=>{
+    // NFTC 103 + NFTC 604: 층수에 따른 헤드 1개당 수원 동적 적용
+    const sWaterPer = buildingFloor===1 ? 1.6 : buildingFloor===2 ? 3.2 : 4.8; // 1.6/3.2/4.8 m³
     const btype=BASE_HEAD_TYPES.find(x=>x.key===sSys.baseType)||BASE_HEAD_TYPES[4];
     const A=btype.n;
     const Clpm=A*FLOW_PER_HEAD;
-    const D=A*S_WATER_PER;
+    const D=A*sWaterPer;
     const E=sSys.actualHead;
     let F=0;
     sSegs.forEach(s=>{
@@ -672,8 +681,8 @@ function App(){
     const G=S_NOZZLE;
     const I=(E+F+G)*0.1;
     const J=Math.ceil(E+F+G+I);
-    return {A,Clpm,D,E,F,G,I,J,btype};
-  },[sSys,sSegs]);
+    return {A,Clpm,D,E,F,G,I,J,btype,sWaterPer};
+  },[sSys,sSegs,buildingFloor]);
 
   /* ── 겸용 펌프 계산 ── */
   const CP=useMemo(()=>{
@@ -714,7 +723,7 @@ function App(){
             <div style={{fontSize:12,marginTop:8,opacity:0.85,letterSpacing:"0.02em"}}>
               옥내소화전(NFPC/NFTC 102) + 스프링클러설비(NFPC/NFTC 103) 겸용 &nbsp;
               <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#93c5fd",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(147,197,253,0.6)"}}>
-                MANMIN · Ver-2.0
+                MANMIN · Ver-3.0
               </span>
             </div>
           </div>
@@ -771,11 +780,20 @@ function App(){
               <div><LabelEl>공사명</LabelEl><input value={proj.name} onChange={e=>setProj(p=>({...p,name:e.target.value}))} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:BD,fontSize:13,outline:"none"}}/></div>
               <div><LabelEl>설계자</LabelEl><input value={proj.designer} onChange={e=>setProj(p=>({...p,designer:e.target.value}))} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:BD,fontSize:13,outline:"none"}}/></div>
               <div><LabelEl>작성일</LabelEl><input type="date" value={proj.date} onChange={e=>setProj(p=>({...p,date:e.target.value}))} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:BD,fontSize:13,outline:"none"}}/></div>
+              <div>
+                <LabelEl>🏢 건축물 규모 (층수)</LabelEl>
+                <Sel val={buildingFloor} onChange={v=>setBuildingFloor(+v)}>
+                  <option value={1}>일반 건축물 (29층 이하) — 방수 20분</option>
+                  <option value={2}>고층 건축물 (30층 ~ 49층) — 방수 40분</option>
+                  <option value={3}>초고층 건축물 (50층 이상) — 방수 60분</option>
+                </Sel>
+                <div style={{fontSize:10,color:"#6b7280",marginTop:4}}>NFTC 102 + NFTC 103 + NFTC 604 — 소화전 기준개수·방수시간 자동 변경</div>
+              </div>
             </div>
           </Box>
           <Box title="Ⅰ. 옥내소화전 시스템 파라미터 (NFTC 102)" color="#b91c1c">
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:14}}>
-              <div><LabelEl>A. 최대구역 소화전 수</LabelEl><InpNum val={hSys.hydrants} min={1} max={5} onChange={v=>ssH("hydrants",v)} unit="개 (최대 5)"/></div>
+              <div><LabelEl>A. 최대구역 소화전 수</LabelEl><InpNum val={hSys.hydrants} min={1} max={H.hMaxCount} onChange={v=>ssH("hydrants",v)} unit={`개 (최대 ${H.hMaxCount})`}/></div>
               <div><LabelEl>F. 실양정 (h₁)</LabelEl><InpNum val={hSys.actualHead} onChange={v=>ssH("actualHead",v)} unit="m"/></div>
               <div><LabelEl>G. 호스 길이</LabelEl>
                 <Sel val={hSys.hoseLen} onChange={v=>ssH("hoseLen",parseInt(v))}>
@@ -803,7 +821,7 @@ function App(){
             velLabel="⚠️ 유속 제한 (NFTC 102 §2.3.5): 펌프 토출 측 주배관 ≤ 4 m/s — 초과 시 ⚡ 표시"
             label="Ⅰ-2. 옥내소화전 배관 구간 데이터 입력"/>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-            MANMIN · Ver-2.0
+            MANMIN · Ver-3.0
           </div>
         </></div>}
 
@@ -830,7 +848,7 @@ function App(){
             velLabel="⚠️ 유속 제한 (NFTC 103 §2.5.3.3): 가지배관 ≤ 6 m/s | 그 밖의 배관 ≤ 10 m/s — 초과 시 ⚡ 표시"
             label="Ⅱ-2. 스프링클러 배관 구간 데이터 입력"/>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-            MANMIN · Ver-2.0
+            MANMIN · Ver-3.0
           </div>
         </></div>}
 
@@ -902,6 +920,7 @@ function App(){
               ◆ 토출량 = 옥내소화전({H.Clpm} ℓ/min) + 스프링클러({S.Clpm} ℓ/min) = <b style={{color:"#fbbf24",fontSize:13}}>{CP.Clpm} ℓ/min</b><br/>
               ◆ 전양정 = max(옥내소화전 {H.J}m, 스프링클러 {S.J}m) = <b style={{color:"#fbbf24",fontSize:13}}>{CP.J} m</b> ({CP.hHead} 기준 채택)<br/>
               ◆ 수원 = 옥내소화전({f3(H.D)} m³) + 스프링클러({f3(S.D)} m³) = <b style={{color:"#fbbf24",fontSize:13}}>{f3(CP.D)} m³</b><br/>
+              <span style={{fontSize:10,color:"#64748b"}}>⌞ 소화전: {H.A}개×130×{H.hWaterTime}÷1000 / 스프링클러: {S.A}개×{S.sWaterPer} m³</span><br/>
               ◆ 축동력 = 0.163 × {f3(CP.M)} m³/min × {CP.J} m × {CP.K} / {CP.N} = <b style={{color:"#fbbf24",fontSize:13}}>{f3(CP.Pkw)} kW</b>
             </div>
 
@@ -922,7 +941,7 @@ function App(){
             </div>
           </div>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:8,paddingRight:4}}>
-            MANMIN · Ver-2.0
+            MANMIN · Ver-3.0
           </div>
         </></div>}
 
@@ -970,10 +989,10 @@ function App(){
                   </tr></thead>
                   <tbody>
                     {[
-                      ["A","최대구역 소화전 수",H.A,"개",`최대 5개 이하 — ${H.A}개 적용`],
+                      ["A","최대구역 소화전 수",H.A,"개",`최대 ${H.hMaxCount}개 이하 — ${H.A}개 적용 (${buildingFloor===1?"일반 건축물":"고층·초고층 건축물"})`],
                       ["B","소화전 개당 방사량",FLOW_PER_HYDRANT,"ℓ/min","NFTC 102 §2.2.1.3 (130 ℓ/min 고정)"],
                       ["C","펌프 토출량",H.Clpm,"ℓ/min",`C = A×B = ${H.A}×${FLOW_PER_HYDRANT}`],
-                      ["D","수원 용량",`${f3(H.D)}`,`m³`,`D = ${H.A}×130×20÷1000 = ${f3(H.D)} m³`],
+                      ["D","수원 용량",`${f3(H.D)}`,`m³`,`D = ${H.A}×130×${H.hWaterTime}÷1000 = ${f3(H.D)} m³`],
                       ["E","실양정 (h₁)",ff(H.E),"m","설계 도면 기준"],
                       ["F","배관 마찰손실 (h₂)",f3(H.F),"m","Hazen-Williams 공식"],
                       ["G","호스 마찰손실 (h₃)",f3(H.G),"m",`${H.hose.label}`],
@@ -1007,7 +1026,7 @@ function App(){
                       ["A","기준 헤드 수",S.A,"개",S.btype.label],
                       ["B","헤드 1개당 방사량",FLOW_PER_HEAD,"ℓ/min","NFTC 103 §2.2.1.11 (80 ℓ/min 고정)"],
                       ["C","펌프 토출량",S.Clpm,"ℓ/min",`C = A×B = ${S.A}×${FLOW_PER_HEAD}`],
-                      ["D","수원 용량",`${f3(S.D)}`,"m³",`D = ${S.A}×1.6 = ${f3(S.D)} m³`],
+                      ["D","수원 용량",`${f3(S.D)}`,"m³",`D = ${S.A}×${S.sWaterPer} = ${f3(S.D)} m³`],
                       ["E","실양정 (h₁)",ff(S.E),"m","설계 도면 기준"],
                       ["F","배관 마찰손실 (h₂)",f3(S.F),"m","Hazen-Williams 공식"],
                       ["G","헤드 최소방수압 환산수두",S.G,"m","0.1 MPa = 10 m"],
@@ -1126,7 +1145,8 @@ function App(){
                   <b>【 겸용 설계 기준 적용 】</b><br/>
                   ① 토출량 = 옥내소화전({H.Clpm} ℓ/min) + 스프링클러({S.Clpm} ℓ/min) = <b>{CP.Clpm} ℓ/min = {f3(CP.M)} m³/min</b><br/>
                   ② 전양정 = max(옥내소화전 {H.J}m, 스프링클러 {S.J}m) → <b>{CP.J} m</b> ({CP.hHead} 기준 채택)<br/>
-                  ③ 수원 = 옥내소화전({f3(H.D)} m³) + 스프링클러({f3(S.D)} m³) = <b>{f3(CP.D)} m³</b>
+                  ③ 수원 = 옥내소화전({f3(H.D)} m³) + 스프링클러({f3(S.D)} m³) = <b>{f3(CP.D)} m³</b><br/>
+                  <span style={{fontSize:10,color:"#475569"}}>⌞ 소화전: {H.A}개×130×{H.hWaterTime}÷1000 / 스프링클러: {S.A}개×{S.sWaterPer} m³</span>
                 </div>
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:10,marginBottom:12,tableLayout:"fixed"}}>
                   <colgroup>
@@ -1163,7 +1183,7 @@ function App(){
               ④ 배관 마찰손실: Hazen-Williams 공식 적용
             </div>
 
-            <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-2.0</div>
+            <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.0</div>
           </div>{/* /report-zone */}
           </div>{/* /rpt-inner */}
           </div>{/* /rpt-outer */}
