@@ -48,7 +48,7 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
     size:A4 portrait;
     margin:14mm 12mm 22mm 14mm;
     @bottom-right{
-      content:"MANMIN-Ver3.1";
+      content:"MANMIN-Ver3.3";
       font-family:'Orbitron',sans-serif;
       font-size:8pt;
       font-weight:700;
@@ -134,6 +134,7 @@ input,select,button,td,th,div,span,p,h1,h2,label{font-family:'Noto Sans KR',sans
 .fml-tab.active-h{background:#b91c1c;color:white;}
 .fml-tab.active-s{background:#15803d;color:white;}
 .fml-tab.active-c{background:#1d4ed8;color:white;}
+.fml-tab.active-how{background:linear-gradient(135deg,#0f172a,#1e3a5f);color:white;}
 .fml-tab:not([class*="active"]){background:#f1f5f9;color:#374151;}
 .fml-sec{margin-bottom:20px;}
 .fml-sec-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;display:flex;align-items:center;gap:6px;padding-left:8px;}
@@ -436,24 +437,140 @@ function PipeTable({segs,setSegs,pipeType,pipeSizes,velLimit,velLimit2,label,vel
    계산식 안내 모달 (겸용 펌프 — 옥내소화전 + 스프링클러)
 ══════════════════════════════════════════════════════════════ */
 function FormulaModal({onClose}){
-  const [ftab,setFtab]=React.useState("h");
+  const [ftab,setFtab]=React.useState("how");
   return(
     <div className="fml-overlay" onClick={onClose}>
       <div className="fml-box" onClick={e=>e.stopPropagation()}>
         <div className="fml-head">
           <div>
             <div style={{fontSize:16,fontWeight:900,letterSpacing:"0.04em"}}>📐 계산식 안내</div>
-            <div style={{fontSize:11,opacity:0.8,marginTop:2}}>겸용 펌프 — NFPC/NFTC 102 + 103 전체 산출 공식</div>
+            <div style={{fontSize:11,opacity:0.8,marginTop:2}}>겸용 펌프 — NFPC/NFTC 102 + 103 전체 산출 공식 · Ver-3.3</div>
           </div>
           <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,width:34,height:34,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>✕</button>
         </div>
         <div className="fml-body">
           <div className="fml-tabs">
+            <button className={`fml-tab ${ftab==="how"?"active-how":""}`} onClick={()=>setFtab("how")}>🗺️ 이용방법</button>
             <button className={`fml-tab ${ftab==="h"?"active-h":""}`} onClick={()=>setFtab("h")}>🔴 옥내소화전</button>
             <button className={`fml-tab ${ftab==="s"?"active-s":""}`} onClick={()=>setFtab("s")}>🟢 스프링클러</button>
             <button className={`fml-tab ${ftab==="c"?"active-c":""}`} onClick={()=>setFtab("c")}>🔵 겸용 펌프</button>
             <button className={`fml-tab ${ftab==="p"?"active-c":""}`} onClick={()=>setFtab("p")}>🔩 배관·공통</button>
           </div>
+
+          {/* ── 이용방법 ── */}
+          {ftab==="how"&&<>
+
+            {/* 상단 배너 */}
+            <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a5f,#1d4ed8)",borderRadius:13,padding:"16px 18px",marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:900,color:"#93c5fd",marginBottom:5,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:20}}>🚒</span> 겸용 펌프 용량 계산서 이용방법
+              </div>
+              <div style={{fontSize:10.5,color:"rgba(255,255,255,.75)",lineHeight:1.7}}>
+                옥내소화전(NFPC/NFTC 102) + 스프링클러(NFPC/NFTC 103) · MANMIN Ver-3.3<br/>
+                아래 순서대로 입력하면 겸용 펌프 수원·양정·동력이 자동으로 산출됩니다.
+              </div>
+            </div>
+
+            {/* STEP 1 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderLeft:"4px solid #1e3a5f",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#1e3a5f,#0f172a)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(30,58,95,.4)"}}>1</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#1e3a5f",marginBottom:5}}>📋 프로젝트 기본 정보 입력</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>공사명·설계자·날짜</strong>를 입력합니다 — 출력 계산서 상단에 표기됩니다.<br/>
+                  ② 상단 탭에서 <strong>「⚙️ 조건 입력」</strong>을 선택하여 시스템 기본 조건을 설정합니다.<br/>
+                  ③ 모든 입력값은 실시간으로 계산서에 자동 반영됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 2 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#fef2f2",border:"1.5px solid #fecaca",borderLeft:"4px solid #b91c1c",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#b91c1c,#7f1d1d)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(185,28,28,.4)"}}>2</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#b91c1c",marginBottom:5}}>🔴 옥내소화전 조건 설정</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>층수(건물 유형)</strong>를 입력합니다 — 29층↓(일반)/30~49층(고층)/50층↑(초고층) 자동 분류.<br/>
+                  ② <strong>가장 많은 층의 소화전 수</strong>를 입력하면 기준개수(일반 2개·고층 5개)가 자동 제한됩니다.<br/>
+                  ③ <strong>호스 길이·종류</strong>를 선택하면 마찰손실이 자동 적용됩니다.<br/>
+                  ④ 수원(A×130×T÷1,000 m³)과 토출량(A×130 ℓ/min)이 자동 산출됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 3 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderLeft:"4px solid #15803d",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#15803d,#14532d)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(21,128,61,.4)"}}>3</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#15803d",marginBottom:5}}>🟢 스프링클러 조건 설정</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>기준개수 유형</strong>(10/20/30개)을 선택합니다 — 용도·높이·구조에 따라 결정됩니다.<br/>
+                  ② <strong>건물 층수 규모</strong>를 선택하면 NFTC 604 고층 기준(수원 3.2/4.8 m³)이 자동 적용됩니다.<br/>
+                  ③ 수원(A×1.6 m³)과 토출량(A×80 ℓ/min)이 자동 산출됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 4 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#eff6ff",border:"1.5px solid #bfdbfe",borderLeft:"4px solid #1d4ed8",borderRadius:10,padding:"13px 14px",marginBottom:9}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#1d4ed8,#1e3a8a)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(29,78,216,.4)"}}>4</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#1d4ed8",marginBottom:5}}>🔵 배관 세그먼트 및 동력 설정</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>실양정(m)</strong>을 입력합니다 — 펌프 설치 위치에서 최고층 헤드까지의 높이입니다.<br/>
+                  ② <strong>배관 세그먼트</strong>를 추가하여 관경·길이·관부속 수량을 입력하면 Hazen-Williams 공식으로 마찰손실이 자동 계산됩니다.<br/>
+                  ③ 겸용 전양정 = max(옥내소화전 J₁, 스프링클러 J₂), 겸용 토출량 = Q₁ + Q₂가 자동 산출됩니다.<br/>
+                  ④ <strong>펌프 관경·전달 방식</strong>을 선택하면 전동기 출력(kW→HP)이 자동 계산됩니다.
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 5 */}
+            <div style={{display:"flex",gap:11,alignItems:"flex-start",background:"#f8fafc",border:"1.5px solid #e2e8f0",borderLeft:"4px solid #334155",borderRadius:10,padding:"13px 14px",marginBottom:16}}>
+              <div style={{minWidth:30,height:30,background:"linear-gradient(135deg,#334155,#0f172a)",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(51,65,85,.4)"}}>5</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:900,color:"#334155",marginBottom:5}}>🖨️ 결과 확인 및 출력</div>
+                <div style={{fontSize:10.5,color:"#374151",lineHeight:1.85}}>
+                  ① <strong>「📄 계산서」 탭</strong>에서 옥내소화전·스프링클러·겸용 펌프 최종 결과를 확인합니다.<br/>
+                  ② 상단 <strong>🖨️ 인쇄 버튼</strong>을 클릭하면 소방 계산서 양식으로 A4 출력·PDF 저장됩니다.<br/>
+                  ③ <strong>「📱 모바일」 탭</strong>에서 JPG로 저장하거나 공유할 수 있습니다.<br/>
+                  ④ PWA 설치: 우측 하단 설치 버튼 또는 iOS Safari → 공유 → 홈 화면에 추가.
+                </div>
+              </div>
+            </div>
+
+            {/* 주요 기능 */}
+            <div className="fml-sec-title" style={{color:"#1e3a5f",borderLeft:"3px solid #1d4ed8",marginTop:0}}>💡 주요 기능 안내</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <div className="fml-card" style={{borderLeft:"3px solid #1e3a5f"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#1e3a5f",marginBottom:4}}>📐 계산식 안내 버튼</div>
+                <div className="fml-note">우측 하단 FAB 버튼을 클릭하면 이 창이 열립니다. 탭을 전환하여 옥내소화전·스프링클러·겸용 펌프·배관 공통 계산식을 확인하세요.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #1d4ed8"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#1d4ed8",marginBottom:4}}>⚡ 실시간 자동 계산</div>
+                <div className="fml-note">모든 입력값 변경 즉시 두 설비의 수원·양정·동력과 겸용 결과가 실시간 재산출됩니다. 별도 계산 버튼이 필요 없습니다.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #b91c1c"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#b91c1c",marginBottom:4}}>🔩 배관 세그먼트 공유</div>
+                <div className="fml-note">배관 세그먼트는 옥내소화전과 스프링클러가 공유합니다. 구간별 유량·관경·관부속을 입력하면 두 설비의 마찰손실이 동시 계산됩니다.</div>
+              </div>
+              <div className="fml-card" style={{borderLeft:"3px solid #15803d"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#15803d",marginBottom:4}}>🔵 겸용 자동 결합</div>
+                <div className="fml-note">겸용 펌프 결과는 별도 입력 없이 자동 산출됩니다. 토출량 합산·전양정 최댓값·수원 합산·전동기 출력이 한 번에 계산됩니다.</div>
+              </div>
+            </div>
+
+            {/* 법적 근거 */}
+            <div style={{border:"1.5px solid #bfdbfe",background:"#eff6ff",borderRadius:10,padding:"12px 14px"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#1e3a5f",marginBottom:6}}>📌 주요 법적 근거</div>
+              <div className="fml-note" style={{fontSize:10.5,lineHeight:2.1}}>
+                <strong>NFPC/NFTC 102</strong> — 옥내소화전설비 화재안전기준 (방수량 130 ℓ/min, 방수압 0.17 MPa)<br/>
+                <strong>NFPC/NFTC 103</strong> — 스프링클러설비 화재안전기준 (방사량 80 ℓ/min, 방수압 0.1 MPa)<br/>
+                <strong>NFTC 604</strong> — 고층건축물 화재안전기술기준 (30층↑ 고층, 50층↑ 초고층 기준)<br/>
+                <strong>Hazen-Williams 공식</strong> — 배관 마찰손실 (C값: 백관·흑관 120, STS·CPVC 150)
+              </div>
+            </div>
+          </>}
 
           {/* ── 옥내소화전 ── */}
           {ftab==="h"&&<>
@@ -593,7 +710,7 @@ function FormulaModal({onClose}){
           </>}
 
           <div style={{textAlign:"center",fontSize:10,color:"#9ca3af",paddingTop:8,borderTop:"1px solid #f1f5f9"}}>
-            NFPC 102 / NFTC 102 + NFPC 103 / NFTC 103 · Hazen-Williams · MANMIN Ver-3.1
+            NFPC 102 / NFTC 102 + NFPC 103 / NFTC 103 · Hazen-Williams · MANMIN Ver-3.3
           </div>
         </div>
       </div>
@@ -755,7 +872,7 @@ function App(){
             <div style={{fontSize:12,marginTop:8,opacity:0.85,letterSpacing:"0.02em"}}>
               옥내소화전(NFPC/NFTC 102) + 스프링클러설비(NFPC/NFTC 103) 겸용 &nbsp;
               <span style={{fontFamily:"'Orbitron',sans-serif",fontWeight:900,fontSize:12,color:"#93c5fd",letterSpacing:"0.08em",textShadow:"0 0 8px rgba(147,197,253,0.6)"}}>
-                MANMIN · Ver-3.1
+                MANMIN · Ver-3.3
               </span>
             </div>
           </div>
@@ -853,7 +970,7 @@ function App(){
             velLabel="⚠️ 유속 제한 (NFTC 102 §2.3.5): 펌프 토출 측 주배관 ≤ 4 m/s — 초과 시 ⚡ 표시"
             label="Ⅰ-2. 옥내소화전 배관 구간 데이터 입력"/>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-            MANMIN · Ver-3.1
+            MANMIN · Ver-3.3
           </div>
         </></div>}
 
@@ -880,7 +997,7 @@ function App(){
             velLabel="⚠️ 유속 제한 (NFTC 103 §2.5.3.3): 가지배관 ≤ 6 m/s | 그 밖의 배관 ≤ 10 m/s — 초과 시 ⚡ 표시"
             label="Ⅱ-2. 스프링클러 배관 구간 데이터 입력"/>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
-            MANMIN · Ver-3.1
+            MANMIN · Ver-3.3
           </div>
         </></div>}
 
@@ -973,7 +1090,7 @@ function App(){
             </div>
           </div>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:8,paddingRight:4}}>
-            MANMIN · Ver-3.1
+            MANMIN · Ver-3.3
           </div>
         </></div>}
 
@@ -1215,7 +1332,7 @@ function App(){
               ④ 배관 마찰손실: Hazen-Williams 공식 적용
             </div>
 
-            <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.1</div>
+            <div id="dev-stamp" style={{fontFamily:"'Orbitron',sans-serif",fontWeight:700,letterSpacing:"0.08em"}}>MANMIN · Ver-3.3</div>
           </div>{/* /report-zone */}
           </div>{/* /rpt-inner */}
           </div>{/* /rpt-outer */}
@@ -1252,7 +1369,7 @@ function App(){
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
-<!-- ═══ Service Worker Ver 3.1 ═══ -->
+<!-- ═══ Service Worker Ver 3.3 ═══ -->
 <script>
 (function(){
   if(!('serviceWorker' in navigator)) return;
