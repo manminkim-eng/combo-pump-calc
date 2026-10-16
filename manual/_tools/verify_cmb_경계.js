@@ -1,0 +1,28 @@
+// 경계값 점검 — node verify_cmb_경계.js ../../index.html
+const fs=require('fs');const h=fs.readFileSync(process.argv[2]||'../../index.html','utf8');const a=h.indexOf('<script id="cmb-engine">')+24;
+var window=globalThis;eval(h.slice(a,h.indexOf('</script>',a)));
+const seg=(o)=>Object.assign({flow:100,dia:200,len:0,e90:0,e45:0,teeB:0,teeS:0,gate:0,ball:0,angle:0,check:0},o);
+const hS={hydrants:2,actualHead:20,hoseLen:15,hoseType:5,pipeType:"SCH10",lowHead:0};
+const sS={baseType:"H10",installN:0,actualHead:20,pipeType:"SCH10",lowHead:0};
+const cS={pumpDia:150,pumpEff:65,transType:1,mode:"sum",roofEx:0,pipeType:"SCH10"};
+const run=(o={})=>cmbCalc({...hS,...o.h},[seg(o.hs||{})],{...sS,...o.s},[seg({kind:"oth",...(o.ss||{})})],{...cS,...o.c},[seg(o.cs||{})],o.bf||1);
+const T=[];const ck=(n,c)=>T.push([n,c?'✓':'✗']);const eq=(x,y)=>Math.abs(x-y)<1e-9;
+ck('마찰계수 800 L/min · 100A KS D 3507 = '+calcFriction(800,100,"SCH10").toFixed(3)+' m/100m (v5.0은 ÷100)',eq(+calcFriction(800,100,"SCH10").toFixed(3),2.922));
+ck('옥내소화전 일반 2 × 2.6 = 5.2 m³',eq(run().H.D,5.2));ck('고층 5 × 5.2 = 26 m³',eq(run({h:{hydrants:7},bf:2}).H.D,26));ck('50층 이상 5 × 7.8 = 39 m³',eq(run({h:{hydrants:7},bf:3}).H.D,39));
+ck('스프링클러 10 × 1.6 / 3.2 / 4.8',eq(run().S.D,16)&&eq(run({bf:2}).S.D,32)&&eq(run({bf:3}).S.D,48));
+ck('설치개수 8 < 10 → 8개 · 12 ≥ 10 → 10개',run({s:{installN:8}}).S.A===8&&run({s:{installN:12}}).S.A===10);
+let r=run();ck('합산 Q 260 + 800 = 1,060 · D 21.2 · 총 저수량 28.267',r.C.Clpm===1060&&eq(r.C.D,21.2)&&eq(r.C.Dt,21.2*4/3));
+r=run({c:{mode:"max",roofEx:1}});ck('최대값 단서 Q 800 · D 16 · 옥상 면제 16',r.C.Clpm===800&&eq(r.C.D,16)&&eq(r.C.Dt,16));
+r=run({h:{actualHead:60}});ck('전양정 = max(옥내 '+r.H.J+', 스프링클러 '+r.S.J+') = '+r.C.J,r.C.J===Math.max(r.H.J,r.S.J));
+r=run({cs:{flow:1060,dia:150,len:100}});ck('공통 배관 손실이 두 설비 양정에 모두 가산',r.Fc>0&&eq(r.H.Jraw,(20+r.Fc+r.H.F+14+17)*1.1)&&eq(r.S.Jraw,(20+r.Fc+r.S.F+10)*1.1));
+const fJ=J=>{for(let x=0;x<200;x+=0.01){const q=run({s:{actualHead:+x.toFixed(2)},h:{actualHead:1}});if(q.C.J===J)return q;}};
+r=fJ(122);ck('J 122 → '+r.C.Pdis.toFixed(3)+' MPa · KS D 3507 적합',!r.C.hiPress&&r.C.pipePressOK);r=fJ(123);ck('J 123 → '+r.C.Pdis.toFixed(3)+' MPa · KS D 3507 부적합',r.C.hiPress&&!r.C.pipePressOK);
+const sJ=fJ(123).S.E;r=run({s:{actualHead:sJ,pipeType:"SCH40"},h:{actualHead:1,pipeType:"SCH40"},c:{pipeType:"SCH40"}});ck('J 123 · 세 배관 모두 KS D 3562 → 적합',r.C.pipePressOK);
+r=run({s:{actualHead:sJ,pipeType:"SCH40"},h:{actualHead:1,pipeType:"SCH40"}});ck('J 123 · 공통 배관만 KS D 3507 → 부적합',!r.C.pipePressOK);
+const J71=fJ(86);const t1=(J71.C.J-0-14)*0.00980665;ck('옥내 노즐 (J − 높이 − G) = '+J71.H.Plow.toFixed(3)+' MPa',eq(J71.H.Plow,t1));
+r=fJ(85);ck('J 85 · 호스릴 14 m → 노즐 '+r.H.Plow.toFixed(3)+' MPa ≤ 0.7 / J 86 → '+J71.H.Plow.toFixed(3)+' > 0.7',!r.H.needPRV&&J71.H.needPRV);
+r=run({s:{actualHead:sJ,lowHead:1}});ck('스프링클러 헤드 J 123 · 높이 1 m → '+r.S.Plow.toFixed(3)+' MPa ≤ 1.2',!r.S.overHead);r=run({s:{actualHead:sJ,lowHead:0}});ck('높이 0 m → '+r.S.Plow.toFixed(3)+' MPa > 1.2',r.S.overHead);
+const v=q=>run({cs:{flow:q,dia:150}}).cdets[0];ck('공통 배관 150A 4,540 L/min '+v(4540).vel.toFixed(3)+' ≤ 4 / 4,541 → '+v(4541).vel.toFixed(3)+' > 4',!v(4540).velOver&&v(4541).velOver);
+const w=(q,k)=>run({ss:{kind:k,flow:q,dia:25}}).S.sdets[0];ck('스프링클러 가지 25A 215 L/min ≤ 6 / 216 > 6 · 교차·주 216 ≤ 10',!w(215,'br').velOver&&w(216,'br').velOver&&!w(216,'oth').velOver);
+ck('고층건축물(bf 2 · 3) → 겸용 펌프 불가 경고 · 일반(bf 1) → 경고 없음',run({bf:2}).C.hiRise&&run({bf:3}).C.hiRise&&!run().C.hiRise);
+T.forEach(t=>console.log(t[1],t[0]));console.log(T.filter(t=>t[1]==='✓').length+' / '+T.length);
