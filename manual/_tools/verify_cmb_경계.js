@@ -16,7 +16,10 @@ r=run({c:{mode:"max",roofEx:1}});ck('최대값 단서 Q 800 · D 16 · 옥상 �
 r=run({h:{actualHead:60}});ck('전양정 = max(옥내 '+r.H.J+', 스프링클러 '+r.S.J+') = '+r.C.J,r.C.J===Math.max(r.H.J,r.S.J));
 r=run({cs:{flow:1060,dia:150,len:100}});ck('공통 배관 손실이 두 설비 양정에 모두 가산',r.Fc>0&&eq(r.H.Jraw,(20+r.Fc+r.H.F+14+17)*1.1)&&eq(r.S.Jraw,(20+r.Fc+r.S.F+10)*1.1));
 const fJ=J=>{for(let x=0;x<200;x+=0.01){const q=run({s:{actualHead:+x.toFixed(2)},h:{actualHead:1}});if(q.C.J===J)return q;}};
-r=fJ(122);ck('J 122 → '+r.C.Pdis.toFixed(3)+' MPa · KS D 3507 적합',!r.C.hiPress&&r.C.pipePressOK);r=fJ(123);ck('J 123 → '+r.C.Pdis.toFixed(3)+' MPa · KS D 3507 부적합',r.C.hiPress&&!r.C.pipePressOK);
+/* v6.1.3 — 배관 사용압력 = 체절압력(입력, 없으면 정격 × 1.4 — 소방청 법령해석 412390) → 경계 J 87 / 88 */
+r=fJ(87);ck('J 87 → 체절 '+r.C.Pshut.toFixed(3)+' MPa · KS D 3507 적합',!r.C.hiPress&&r.C.pipePressOK);r=fJ(88);ck('J 88 → 체절 '+r.C.Pshut.toFixed(3)+' MPa · KS D 3507 부적합',r.C.hiPress&&!r.C.pipePressOK);
+{const e=fJ(123).S.E;r=run({s:{actualHead:e},h:{actualHead:1},c:{shutPress:1.15}});ck('J 123 · 입력 체절 1.15 MPa → KS D 3507 적합',!r.C.hiPress&&r.C.pipePressOK&&r.C.shutUser);
+ const e2=fJ(40).S.E;r=run({s:{actualHead:e2},h:{actualHead:1},c:{shutPress:1.2}});ck('J 40 · 입력 체절 1.2 MPa → KS D 3507 부적합',r.C.hiPress&&!r.C.pipePressOK);}
 const sJ=fJ(123).S.E;r=run({s:{actualHead:sJ,pipeType:"SCH40"},h:{actualHead:1,pipeType:"SCH40"},c:{pipeType:"SCH40"}});ck('J 123 · 세 배관 모두 KS D 3562 → 적합',r.C.pipePressOK);
 r=run({s:{actualHead:sJ,pipeType:"SCH40"},h:{actualHead:1,pipeType:"SCH40"}});ck('J 123 · 공통 배관만 KS D 3507 → 부적합',!r.C.pipePressOK);
 const J71=fJ(86);const t1=(J71.C.J-0-14)*0.00980665;ck('옥내 노즐 (J − 높이 − G) = '+J71.H.Plow.toFixed(3)+' MPa',eq(J71.H.Plow,t1));
