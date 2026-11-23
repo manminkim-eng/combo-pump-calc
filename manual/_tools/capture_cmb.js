@@ -25,20 +25,20 @@ window.__ex=k=>{const e=__EX[k];const x=CMBENG.calc(e.hSys,e.hSegs,e.sSys,e.sSeg
  return {in:e,Fc:x.Fc,cseg:x.cdets.map(d=>({fric:d.fric,tl:d.tl,hl:d.hl,vel:d.vel})),
   H:{...pick(x.H,['A','B','Clpm','D','E','Fc','F','G','H4','I','Jraw','J','hMaxCount','hWaterTime','hL','Plow','needPRV','hStar','pipeOK']),seg:x.H.sdets.map(d=>({hl:d.hl,vel:d.vel}))},
   S:{...pick(x.S,['A','B','Clpm','D','E','Fc','F','G','I','Jraw','J','sWaterPer','nInst','useInst','hL','Plow','overHead','hStar','pipeOK']),btype:x.S.btype,seg:x.S.sdets.map(d=>({hl:d.hl,vel:d.vel,vlim:d.vlim}))},
-  C:pick(x.C,['hiRise','maxMode','Clpm','J','D','R','Dt','roofEx','M','N','K','Pkw','Php','hHead','Pdis','hiPress','pipePressOK','velOverN'])};};`;
+  C:pick(x.C,['hiRise','maxMode','Clpm','J','D','R','Dt','roofEx','M','N','K','Pkw','Php','hHead','Pdis','Pshut','shutUser','hiPress','pipePressOK','velOverN'])};};`;
 const SHOTS=[
  {id:'s01_overview',pre:"__run('A',0)",clip:'viewport',m:[['.tab-bar-wrap','작업 탭 · 매뉴얼'],['.sum-bar','요약 바'],['box:프로젝트 정보','프로젝트 · 건축물 규모'],['box:Ⅰ. 옥내소화전','옥내소화전 파라미터'],['.formula-fab','계산식 안내']]},
  {id:'s02_header',clip:'nth:.no-print|0',m:[['nth:.tab-bar-wrap button|0','① 옥내소화전 입력'],['nth:.tab-bar-wrap button|1','② 스프링클러 입력'],['nth:.tab-bar-wrap button|2','③ 겸용펌프 결과'],['nth:.tab-bar-wrap button|3','④ 계산서 출력'],['.tb-manual','📘 매뉴얼'],['.hdr-right','근거 · 공고 · 시행일']]},
  {id:'s03_project',clip:'box:프로젝트 정보',m:[['lab:공사명','공사명'],['lab:설계자','설계자'],['lab:작성일','작성일'],['lab:🏢 건축물 규모','건축물 규모 — 일반 · 고층건축물 · 50층 이상']]},
- {id:'s04_hyd',clip:'box:Ⅰ. 옥내소화전',m:[['lab:A. 최대구역','A. 가장 많은 층 소화전 수'],['lab:F. 실양정','F. 실양정'],['lab:F-1. 최저층 방수구','F-1. 최저층 방수구 높이'],['lab:G. 호스 길이','G. 호스 길이'],['lab:G-1. 호스 타입','G-1. 호스 종류'],['lab:배관 종류','배관 종류(C값)']]},
+ {id:'s04_hyd',clip:'box:Ⅰ. 옥내소화전',m:[['lab:A. 최대구역','A. 가장 많은 층 소화전 수 — 입력 3 → 적용 2개 ⚠'],['lab:F. 실양정','F. 실양정'],['lab:F-1. 최저층 방수구','F-1. 최저층 방수구 높이'],['lab:G. 호스 길이','G. 호스 길이'],['lab:G-1. 호스 타입','G-1. 호스 종류'],['lab:배관 종류','배관 종류(C값)']]},
  {id:'s05_hseg',clip:'box:Ⅰ-2',crop:620,m:[['nth:#root table tbody tr|0','1구간 — 분기 후 100A'],['nth:#root table tbody tr|3','4구간 — 방수구 50A'],['nth:button|__ADD__','＋ 구간 추가']]},
  {id:'s06_spk',pre:"__mmCmb.setTab(1)",wait:900,clip:'box:Ⅱ. 스프링클러',m:[['lab:A. 기준개수','A. 기준개수 — 표 2.1.1.1 · NFTC 608'],['lab:A-1. 설치개수','A-1. 설치개수'],['lab:F. 실양정','F. 실양정'],['lab:F-1. 최저층 헤드','F-1. 최저층 헤드 높이'],['lab:배관 종류','배관 종류(C값)']]},
  {id:'s07_sseg',clip:'box:Ⅱ-2',crop:640,m:[['nth:.seg-kind|0','구분 — 가지 / 교차·주'],['nth:#root table tbody tr|0','1구간 — 교차·주 100A'],['nth:#root table tbody tr|3','4구간 — 가지 40A']]},
- {id:'s08_cparam',pre:"__mmCmb.setTab(2)",wait:900,clip:'box:겸용 펌프 파라미터',m:[['lab:펌프 토출구경','펌프 구경'],['lab:펌프 효율','펌프 효율'],['lab:동력 전달방식','전달방식'],['lab:겸용 기준','겸용 기준 — 합산 / 방화벽 구획 최대값'],['lab:옥상수조','옥상수조 1/3'],['lab:공통 배관 종류','공통 배관 종류']]},
+ {id:'s08_cparam',pre:"__mmCmb.setTab(2)",wait:900,clip:'box:겸용 펌프 파라미터',m:[['lab:펌프 토출구경','펌프 구경'],['lab:펌프 효율','펌프 효율'],['lab:동력 전달방식','전달방식'],['lab:겸용 기준','겸용 기준 — 합산 / 방화벽 구획 최대값'],['lab:옥상수조','옥상수조 1/3'],['lab:공통 배관 종류','공통 배관 종류'],['lab:S-1. 펌프 체절압력','S-1 체절압력(선택) — 배관 사용압력']]},
  {id:'s09_cseg',clip:'box:Ⅲ-1',crop:420,m:[['nth:#root table tbody tr|0','공통 배관 150A · 1,060 L/min']]},
  {id:'s10_result',clip:'.g-res',m:[['nth:.g-res > div|0','옥내소화전 단독 — 전양정 65 m'],['nth:.g-res > div|1','스프링클러 단독 — 전양정 61 m'],['card:공통 배관 (F₀)','공통 배관 F₀ 가산']]},
- {id:'s11_final',clip:'.mm-final',m:[['.mm-basis','겸용 설계 기준'],['nth:.mm-press > div|0','S 배관 사용압력'],['nth:.mm-press > div|1','T₁ 옥내소화전 최저층 노즐'],['nth:.mm-press > div|2','T₂ 스프링클러 최저층 헤드'],['.g-4cp','펌프 선정 결과']]},
- {id:'s12_b_final',pre:"__run('B',2)",wait:1000,clip:'.mm-final',m:[['.mm-basis','합산 2,660 L/min · 70.933 m³'],['nth:.mm-press > div|0','1.334 MPa — KS D 3562'],['nth:.mm-press > div|1','감압장치 필요'],['nth:.mm-press > div|2','헤드 1.2 MPa 초과 — 감압 검토']]},
+ {id:'s11_final',clip:'.mm-final',m:[['.mm-basis','겸용 설계 기준'],['nth:.mm-press > div|0','S 배관 사용압력(체절 = 정격 × 1.4)'],['nth:.mm-press > div|1','T₁ 옥내소화전 최저층 노즐'],['nth:.mm-press > div|2','T₂ 스프링클러 최저층 헤드'],['.g-4cp','펌프 선정 결과']]},
+ {id:'s12_b_final',pre:"__run('B',2)",wait:1000,clip:'.mm-final',m:[['.mm-basis','합산 2,660 L/min · 70.933 m³'],['nth:.mm-press > div|0','체절 1.867 MPa — KS D 3562'],['nth:.mm-press > div|1','감압장치 필요'],['nth:.mm-press > div|2','헤드 1.2 MPa 초과 — 감압 검토']]},
  {id:'s13_c_cparam',pre:"__run('C',2)",wait:1000,clip:'box:겸용 펌프 파라미터',m:[['lab:겸용 기준','최대값 — 방화벽 · 방화문 구획'],['lab:옥상수조','면제 — 높이 10 m 이하']]},
  {id:'s14_c_final',clip:'.mm-final',m:[['.mm-basis','max(260, 1,920) · 38.400 m³']]},
  {id:'s15_hirise',pre:"__run('A',0);__mmCmb.setBuildingFloor(2)",wait:900,clip:'box:프로젝트 정보',post:"__mmCmb.setBuildingFloor(1)",m:[['lab:🏢 건축물 규모','고층건축물 선택'],['.mm-hirise','NFTC 604 2.1.3 · 2.2.3 — 겸용 펌프 불가']]},
@@ -102,7 +102,7 @@ const SHOTS=[
  ex.mobile=await mp.evaluate(()=>({page:document.documentElement.scrollWidth,vw:innerWidth}));
  fs.writeFileSync(path.join(out,'_marks.json'),JSON.stringify(meta,null,1));fs.writeFileSync(path.join(out,'_example.json'),JSON.stringify(ex,null,1));
  const miss=[];Object.entries(meta).forEach(([k,v])=>v.marks.forEach(m=>{if(m.miss)miss.push(k+':'+m.miss);else if(m.x<0||m.y<0||m.x+m.w>100.5||m.y+m.h>100.5||m.w<=0||m.h<=0)miss.push(k+':OUT '+m.label+' '+m.x+','+m.y+','+m.w+','+m.h);}));
- const sh=o=>o&&{Hj:o.H.J,Sj:o.S.J,Q:o.C.Clpm,D:o.C.D,Dt:o.C.Dt,J:o.C.J,HP:o.C.Php,S:o.C.Pdis};
+ const sh=o=>o&&{Hj:o.H.J,Sj:o.S.J,Q:o.C.Clpm,D:o.C.D,Dt:o.C.Dt,J:o.C.J,HP:o.C.Php,S:o.C.Pdis,Sh:o.C.Pshut,ok:o.C.pipePressOK};
  console.log(JSON.stringify({A:sh(ex.A),B:sh(ex.B),C:sh(ex.C),mobile:ex.mobile,sizes:Object.fromEntries(Object.entries(meta).map(([k,v])=>[k,v.w+'x'+v.h])),miss,errs:errs.slice(0,15)},null,1));
  await b.close();s.close();
 })();

@@ -9,5 +9,5 @@ await pg.evaluate(()=>window.__mmCmb.setShowFormula(true));await pg.waitForTimeo
 const st=await pg.evaluate(()=>window.__mmCmb.get());
 r.X=await pg.evaluate(s=>{const x=window.CMBENG.calc(s.hSys,s.hSegs,s.sSys,s.sSegs,s.cPump,s.cSegs,s.buildingFloor);const f=v=>+v.toFixed(3);
  return {Fc:f(x.Fc),H:{A:x.H.A,Q:x.H.Clpm,D:f(x.H.D),F:f(x.H.F),G:f(x.H.G),J:x.H.J,Tl:f(x.H.Plow)},S:{A:x.S.A,Q:x.S.Clpm,D:f(x.S.D),F:f(x.S.F),J:x.S.J,Tl:f(x.S.Plow)},
-  C:{Q:x.C.Clpm,J:x.C.J,D:f(x.C.D),R:f(x.C.R),Dt:f(x.C.Dt),Pkw:f(x.C.Pkw),HP:x.C.Php,S:f(x.C.Pdis),ok:x.C.pipePressOK,vo:x.C.velOverN}}},st);
+  C:{Q:x.C.Clpm,J:x.C.J,D:f(x.C.D),R:f(x.C.R),Dt:f(x.C.Dt),Pkw:f(x.C.Pkw),HP:x.C.Php,S:f(x.C.Pdis),Sh:f(x.C.Pshut),hi:x.C.hiPress,ok:x.C.pipePressOK,vo:x.C.velOverN}}},st);
 console.log(JSON.stringify(r));console.log('ERR',errs.length,errs.slice(0,5).join(' | '));await b.close();srv.close();})();
