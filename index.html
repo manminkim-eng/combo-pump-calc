@@ -460,6 +460,19 @@ const BD="1px solid #d1d5db";
 const f2=v=>isNaN(v)?"-":Number(v).toFixed(2);
 const f3=v=>isNaN(v)?"-":Number(v).toFixed(3);
 const ff=(v,d=1)=>isNaN(v)?"-":Number(v).toFixed(d);
+/* v6.1.4 (2026-11-24) — 옥상수조 면제 사유(교차검증 2026-11-23 P5): NFTC 102 2.1.2 (1)~(7) · NFTC 103 2.1.2 (1)~(6) 단서 중 두 설비에 공통인 것.
+   NFTC 102 (6)(2.2.1.9 단서 — 학교 · 공장 · 창고 기동스위치)은 옥내소화전에만 있어 겸용 수조 사유에서 뺌. 고층건축물은 (2) · (3)만(NFTC 604 2.1.2 · 2.2.2).
+   값 1 = 종전 「면제 — 단서 해당」(사유 미선택, 예전 저장값 호환). 계산은 0 이 아니면 면제 — 엔진(cmbCalc) 불변 */
+const ROOF_EX=[
+  {v:11,no:"(1)",t:"지하층만 있는 건축물",hi:false},
+  {v:12,no:"(2)",t:"고가수조를 가압송수장치로 설치",hi:true},
+  {v:13,no:"(3)",t:"수원이 최상층 방수구 · 헤드보다 높은 위치",hi:true},
+  {v:14,no:"(4)",t:"건축물 높이가 지표면에서 10 m 이하",hi:false},
+  {v:15,no:"(5)",t:"주펌프와 동등 이상 별도 펌프(내연기관 연동 또는 비상전원)",hi:false},
+  {v:16,no:"102 (7) · 103 (6)",t:"가압수조를 가압송수장치로 설치",hi:false},
+];
+const roofInfo=v=>ROOF_EX.find(r=>r.v===+v)||null;
+const LOW10_KEYS=["F30","F20","S30","S20","H20","H10"];   /* NFTC 103 표 2.1.1.1 「10층 이하」 행 */
 
 /* ── 공통 UI 컴포넌트 ── */
 function LabelEl({children}){return <div style={{fontSize:11,fontWeight:700,color:"#374151",marginBottom:5,letterSpacing:"0.02em"}}>{children}</div>;}
@@ -618,7 +631,7 @@ function FormulaModal({onClose}){
         <div className="fml-head">
           <div>
             <div style={{fontSize:16,fontWeight:900,letterSpacing:"0.04em"}}>📐 계산식 안내</div>
-            <div style={{fontSize:11,opacity:0.8,marginTop:2}}>겸용 펌프 — NFPC/NFTC 102 + 103 전체 산출 공식 · Ver-5.1</div>
+            <div style={{fontSize:11,opacity:0.8,marginTop:2}}>겸용 펌프 — NFPC/NFTC 102 + 103 전체 산출 공식 · Ver-6.1</div>
           </div>
           <button onClick={onClose} style={{background:"rgba(255,255,255,0.15)",border:"none",color:"white",borderRadius:8,width:34,height:34,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>✕</button>
         </div>
@@ -879,7 +892,7 @@ function FormulaModal({onClose}){
                 <div className="fml-note">
                   공통 배관 · 옥내소화전 (NFTC 102 2.3.5): 펌프 토출 측 주배관 ≤ 4 m/s<br/>
                   스프링클러 (NFTC 103 2.5.3.3 단서 — 수리계산 시): 가지배관 ≤ 6 m/s | 그 밖의 배관 ≤ 10 m/s<br/>
-                  배관 사용압력 S = 체절압력(입력, 없으면 J × 0.0098 × 1.4 — 소방청 법령해석 412390 · NFTC 102 2.2.1.7 · NFTC 103 2.2.1.5) 1.2 MPa 이상: KS D 3562 · 3583 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2 · NFTC 103 2.5.1.2)
+                  배관 사용압력 S = 체절압력(입력, 없으면 J × 0.0098 × 1.4 — 소방청 법령해석 412390 · NFTC 102 2.2.1.7 · NFTC 103 2.2.1.5) 1.2 MPa 이상: KS D 3562 또는 KS D 3583, 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2 · NFTC 103 2.5.1.2)
                 </div>
               </div>
             </div>
@@ -982,6 +995,11 @@ function App(){
   /* ── 계산 (v5.1.0 — cmb-engine 의 cmbCalc 단일화) ── */
   const X=useMemo(()=>cmbCalc(hSys,hSegs,sSys,sSegs,cPump,cSegs,buildingFloor),[hSys,hSegs,sSys,sSegs,cPump,cSegs,buildingFloor]);
   const H=X.H, S=X.S, CP=X.C;
+  /* v6.1.4 표시 전용(P4 · P5) — 계산값 불변 */
+  const roofR=roofInfo(cPump.roofEx);
+  const roofBad=buildingFloor>1&&+cPump.roofEx!==0&&!(roofR&&roofR.hi);
+  const sLow10=buildingFloor>1&&LOW10_KEYS.indexOf(sSys.baseType)>=0;
+  const MAXREQ="단서 요건(고정식 소화설비 2 이상 · 방화벽과 방화문 구획 · 각 소화설비에 지장 없음 — NFTC 102 2.9.1 · 2.9.2 · NFTC 103 2.13.1 · 2.13.2) 확인 — 옥내소화전의 「고정식 소화설비」 해당 여부는 관할 소방서 협의 권장";
 
   const TABS=["① 옥내소화전 입력","② 스프링클러 입력","③ 겸용펌프 결과","④ 계산서 출력"];
   const TAB_COLORS=["#15803d","#15803d","#15803d","#334155"];
@@ -1105,7 +1123,7 @@ function App(){
                 <Sel val={hSys.pipeType} onChange={v=>ssH("pipeType",v)}>
                   {Object.entries(PIPE_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label} (C={v.C})</option>)}
                 </Sel>
-                {!H.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2)</div>}
+                {!H.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 또는 KS D 3583 사용, 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2)</div>}
               </div>
             </div>
             <div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>방수량 130 ℓ/min 이상 · 노즐선단 0.17 MPa 이상(NFTC 102 2.2.1.3) · 토출량 = 설치개수(2개 이상이면 2개, 고층 5개) × 130 ℓ/min(2.2.1.4 · NFTC 604)</div>
@@ -1113,7 +1131,7 @@ function App(){
           <PipeTable segs={hSegs} setSegs={setHSegs} pipeType={hSys.pipeType} pipeSizes={H_PIPE_SIZES}
             velLimit={4}
             flowOpts={[130,260,390,520,650]}
-            velLabel="⚠️ 유속 참고 (NFTC 102 2.3.5): 펌프 토출 측 주배관 4 m/s 이하 — 이 표(분기 후 옥내소화전 배관)에도 4 m/s를 참고로 표시 · 펌프 토출 측 공통 주배관은 ③ 탭 「공통 배관」에서 판정"
+            velLabel="⚠️ 유속 참고 (NFTC 102 2.3.5): 펌프 토출 측 주배관 4 m/s 이하 — 이 표(분기 후 옥내소화전 배관)에도 4 m/s를 참고로 표시 · 펌프 토출 측 공통 주배관은 ③ 탭 「공통 배관」에서 판정 · 구경: 방수구 가지배관 40 mm(호스릴 25 mm) 이상 · 주배관 중 수직배관 50 mm(호스릴 32 mm) 이상(NFTC 102 2.3.5) — 구간 구분이 없어 자동 판정하지 않음, 설계자 확인"
             label="Ⅰ-2. 옥내소화전 배관 구간 (공통 배관 분기 후)" hdColor="#14532d"/>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",paddingRight:4}}>
             MANMIN · Ver-6.1
@@ -1129,6 +1147,7 @@ function App(){
                   {BASE_HEAD_TYPES.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}
                 </Sel>
                 <div style={{fontSize:11,color:"#6b7280",marginTop:4}}>헤드 1개 80 ℓ/min 이상 · 헤드선단 0.1 MPa 이상 1.2 MPa 이하(NFTC 103 2.2.1.10 ~ 2.2.1.12) · 2 이상에 해당하면 많은 쪽</div>
+                {sLow10&&<div className="mm-low10-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 고층건축물(30층 이상)인데 「10층 이하」 행을 골랐습니다 — 표 2.1.1.1 「지하층을 제외한 층수 11층 이상」 행(또는 아파트등) 확인</div>}
               </div>
               <div><LabelEl>A-1. 설치개수 (가장 많은 층 · 세대)</LabelEl><InpNum val={sSys.installN} min={0} onChange={v=>ssS("installN",v)} unit="개"/>
                 <div style={{fontSize:11,color:S.useInst?"#15803d":"#6b7280",marginTop:4,fontWeight:S.useInst?700:400}}>{S.useInst?`기준개수 ${S.btype.n}개보다 적어 ${S.A}개 적용(2.1.1.1 괄호)`:"0 = 미입력 · 기준개수보다 적으면 설치개수 적용"}</div></div>
@@ -1139,7 +1158,7 @@ function App(){
                 <Sel val={sSys.pipeType} onChange={v=>ssS("pipeType",v)}>
                   {Object.entries(PIPE_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label} (C={v.C})</option>)}
                 </Sel>
-                {!S.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 103 2.5.1.2)</div>}
+                {!S.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 또는 KS D 3583 사용, 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 103 2.5.1.2)</div>}
               </div>
             </div>
           </Box>
@@ -1182,21 +1201,24 @@ function App(){
                   <option value="max">최대값 — 고정식 소화설비 2 이상 · 방화벽과 방화문으로 구획 · 각 설비에 지장 없음 (단서)</option>
                 </Sel>
                 <div style={{fontSize:11,color:"#6b7280",marginTop:4}}>NFTC 102 2.9.1 · 2.9.2 / NFTC 103 2.13.1 · 2.13.2 — 저수량 · 펌프 토출량은 각 소화설비 합 이상, 단서 해당 시 최대의 것 이상</div>
+                {CP.maxMode&&<div className="mm-max-note" style={{marginTop:5,fontSize:11,color:"#92400e",fontWeight:700}}>ⓘ {MAXREQ}</div>}
               </div>
               <div>
                 <LabelEl>옥상수조 (유효수량 1/3)</LabelEl>
                 <Sel val={cPump.roofEx} onChange={v=>ssCp("roofEx",+v)}>
                   <option value={0}>설치 대상 — 유효수량 외 1/3 이상</option>
-                  <option value={1}>면제 — 단서 해당</option>
+                  {ROOF_EX.map(r=><option key={r.v} value={r.v}>{`면제 ${r.no} ${r.t}${buildingFloor>1&&!r.hi?" — 고층 해당 없음":""}`}</option>)}
+                  {+cPump.roofEx===1&&<option value={1}>면제 — 단서 해당 (사유 미선택)</option>}
                 </Sel>
-                <div style={{fontSize:11,color:"#6b7280",marginTop:4}}>NFTC 102 2.1.2 · NFTC 103 2.1.2 {buildingFloor>1?"· 고층건축물은 (2) 고가수조 · (3) 수원이 최상층보다 높은 경우만 면제(NFTC 604 2.1.2 · 2.2.2)":"(1) 지하층만 · (2) 고가수조 · (3) 수원이 최상층보다 높음 · (4) 높이 10 m 이하 · (5) 내연기관 · 비상전원 예비펌프 · 가압수조 등"}</div>
+                <div style={{fontSize:11,color:"#6b7280",marginTop:4}}>NFTC 102 2.1.2 · NFTC 103 2.1.2 단서 — 고른 사유는 계산서 ③에 적힘 · {buildingFloor>1?"고층건축물은 (2) 고가수조 · (3) 수원이 최상층보다 높은 경우만 면제(NFTC 604 2.1.2 · 2.2.2)":"NFTC 102 (6)(2.2.1.9 단서)은 옥내소화전에만 있어 겸용 수조 사유에서 뺌"}</div>
+                {roofBad&&<div className="mm-roof-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 고층건축물은 (2) · (3)만 옥상수조 면제(NFTC 604 2.1.2 · 2.2.2) — 선택한 면제 사유 확인</div>}
               </div>
               <div>
                 <LabelEl>공통 배관 종류 (C값)</LabelEl>
                 <Sel val={cPump.pipeType} onChange={v=>ssCp("pipeType",v)}>
                   {Object.entries(PIPE_CONFIG).map(([k,v])=><option key={k} value={k}>{v.label} (C={v.C})</option>)}
                 </Sel>
-                {!CP.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2 · NFTC 103 2.5.1.2)</div>}
+                {!CP.pipeOK&&<div className="mm-pipe-warn" style={{marginTop:5,fontSize:11,color:"#b91c1c",fontWeight:700}}>⚠ 사용압력(체절) {ff(CP.Pshut,3)} MPa ≥ 1.2 MPa — KS D 3562 또는 KS D 3583 사용, 또는 릴리프밸브로 1.2 MPa 미만 유지 (NFTC 102 2.3.1.2 · NFTC 103 2.5.1.2)</div>}
               </div>
               {/* S-1 — v6.1.3 배관 사용압력(체절압력) 판정용 */}
               <div>
@@ -1254,15 +1276,15 @@ function App(){
             {/* 산출 근거 표시 */}
             <div className="mm-basis" style={{background:"rgba(255,255,255,0.06)",borderRadius:10,padding:"12px 16px",marginBottom:14,fontSize:11,color:"#cbd5e1",lineHeight:2}}>
               <b style={{color:"#86efac"}}>【 겸용 설계 기준 】</b><br/>
-              ◆ 토출량 = {CP.maxMode?"max":""}(옥내소화전 {H.Clpm} ℓ/min {CP.maxMode?",":"+"} 스프링클러 {S.Clpm} ℓ/min) = <b style={{color:"#4ade80",fontSize:13}}>{CP.Clpm} ℓ/min</b>{CP.maxMode?" (방화벽 구획 단서)":""}<br/>
+              ◆ 토출량 = {CP.maxMode?"max":""}(옥내소화전 {H.Clpm} ℓ/min {CP.maxMode?",":"+"} 스프링클러 {S.Clpm} ℓ/min) = <b style={{color:"#4ade80",fontSize:13}}>{CP.Clpm} ℓ/min</b>{CP.maxMode?" (방화벽 구획 단서 — 요건 확인)":""}<br/>
               ◆ 전양정 = max(옥내소화전 {H.J}m, 스프링클러 {S.J}m) = <b style={{color:"#4ade80",fontSize:13}}>{CP.J} m</b> ({CP.hHead} 기준 채택 · 공통 배관 {f3(X.Fc)} m 포함)<br/>
-              ◆ 유효수량 = {CP.maxMode?"max":""}(옥내소화전 {f3(H.D)} m³ {CP.maxMode?",":"+"} 스프링클러 {f3(S.D)} m³) = {f3(CP.D)} m³ · 옥상수조 {CP.roofEx?"면제":`${f3(CP.R)} m³`} → 총 저수량 <b style={{color:"#4ade80",fontSize:13}}>{f3(CP.Dt)} m³</b><br/>
+              ◆ 유효수량 = {CP.maxMode?"max":""}(옥내소화전 {f3(H.D)} m³ {CP.maxMode?",":"+"} 스프링클러 {f3(S.D)} m³) = {f3(CP.D)} m³ · 옥상수조 {CP.roofEx?`면제${roofR?" "+roofR.no:""}${roofBad?" ⚠ 고층 사유 확인":""}`:`${f3(CP.R)} m³`} → 총 저수량 <b style={{color:"#4ade80",fontSize:13}}>{f3(CP.Dt)} m³</b><br/>
               <span style={{fontSize:11,color:"#64748b"}}>⌞ 소화전: {H.A}개×130×{H.hWaterTime}÷1000 / 스프링클러: {S.A}개×{S.sWaterPer} m³</span><br/>
               ◆ 축동력 = 0.163 × {f3(CP.M)} m³/min × {CP.J} m × {CP.K} / {CP.N} = <b style={{color:"#4ade80",fontSize:13}}>{f3(CP.Pkw)} kW</b>
             </div>
             {/* v5.1.0 — 압력 판정(표시 전용) */}
             <div className="mm-press" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:10,marginBottom:14}}>
-              {[["S. 배관 사용압력 (체절압력)",`${f3(CP.Pshut)} MPa`,`${CP.shutUser?"입력 체절압력":`정격 ${f3(CP.Pdis)} MPa × 1.4`} — `+(CP.hiPress?(CP.pipePressOK?"1.2 MPa 이상 — KS D 3562 적합":"1.2 MPa 이상 — KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지"):"1.2 MPa 미만 — KS D 3507 가능"),CP.pipePressOK],
+              {[["S. 배관 사용압력 (체절압력)",`${f3(CP.Pshut)} MPa`,`${CP.shutUser?"입력 체절압력":`정격 ${f3(CP.Pdis)} MPa × 1.4`} — `+(CP.hiPress?(CP.pipePressOK?"1.2 MPa 이상 — KS D 3562 적합":"1.2 MPa 이상 — KS D 3562 또는 KS D 3583 사용, 또는 릴리프밸브로 1.2 MPa 미만 유지"):"1.2 MPa 미만 — KS D 3507 가능"),CP.pipePressOK],
                 ["T₁. 옥내소화전 최저층 노즐",`${f3(H.Plow)} MPa`,H.needPRV?`0.7 MPa 초과 — 감압장치(펌프 기준 ${ff(H.hStar,1)} m 미만 방수구)`:"0.7 MPa 이하 — 감압장치 불요",!H.needPRV],
                 ["T₂. 스프링클러 최저층 헤드",`${f3(S.Plow)} MPa`,S.overHead?`1.2 MPa 초과 — 감압 검토(펌프 기준 ${ff(S.hStar,1)} m 미만 헤드)`:"1.2 MPa 이하 — 상한 이내",!S.overHead]].map(([l,v,t,ok])=>(
                 <div key={l} style={{background:ok?"rgba(34,197,94,0.12)":"rgba(239,68,68,0.15)",border:`1px solid ${ok?"rgba(34,197,94,0.4)":"rgba(239,68,68,0.5)"}`,borderRadius:8,padding:"10px 12px"}}>
@@ -1287,6 +1309,7 @@ function App(){
             </div>
             <div style={{borderTop:"1px solid rgba(255,255,255,0.15)",paddingTop:14,textAlign:"center",fontSize:18,fontWeight:900,color:"#86efac",letterSpacing:"0.05em",fontFamily:"'JetBrains Mono','Pretendard Variable',Pretendard,'Noto Sans KR',monospace"}}>
               Q = {f3(CP.M)} ㎥/min &nbsp;×&nbsp; H = {CP.J} m &nbsp;×&nbsp; P = {CP.Php} HP
+              {CP.hiRise&&<div className="mm-hirise-q" style={{fontSize:11.5,color:"#fca5a5",letterSpacing:0,marginTop:4}}>참고 계산 — 고층 겸용 불가(NFTC 604 2.1.3 · 2.2.3)</div>}
             </div>
           </div>
           <div style={{textAlign:"right",fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:"#94a3b8",letterSpacing:"0.08em",marginTop:8,paddingRight:4}}>
@@ -1325,6 +1348,7 @@ function App(){
                   ))}
                 </tr></tbody>
               </table>
+              {CP.hiRise&&<div className="mm-hirise-a4" style={{marginTop:10,fontSize:11,fontWeight:700,color:"#b91c1c",border:"1px solid #fecaca",background:"#fef2f2",borderRadius:6,padding:"5px 10px"}}>⚠ 참고 계산 — 고층건축물은 펌프를 옥내소화전 · 스프링클러 각 설비 전용 + 예비펌프로 설치(NFTC 604 2.1.3 · 2.2.3) : 겸용 펌프 불가{sLow10?" · 스프링클러 기준개수 「10층 이하」 행 선택 — 확인":""}</div>}
             </div>
 
             {/* Ⅰ. 옥내소화전 */}
@@ -1542,9 +1566,10 @@ function App(){
                   <b>【 겸용 설계 기준 적용 】</b><br/>
                   {CP.hiRise&&<><b style={{color:"#b91c1c"}}>⚠ 고층건축물 — 펌프 각 설비 전용 · 예비펌프(NFTC 604 2.1.3 · 2.2.3) : 겸용 펌프 불가, 아래는 참고 계산</b><br/></>}
                   ① 토출량 = {CP.maxMode?"max(":""}옥내소화전 {H.Clpm} ℓ/min {CP.maxMode?",":"+"} 스프링클러 {S.Clpm} ℓ/min{CP.maxMode?")":""} = <b>{CP.Clpm} ℓ/min = {f3(CP.M)} m³/min</b> — {CP.maxMode?"방화벽 · 방화문 구획 단서(NFTC 102 2.9.2 · NFTC 103 2.13.2 단서)":"합산(NFTC 102 2.9.2 · NFTC 103 2.13.2)"}<br/>
+                  {CP.maxMode&&<><span className="mm-max-a4" style={{fontSize:10,color:"#92400e"}}>⌞ {MAXREQ}</span><br/></>}
                   ② 전양정 = max(옥내소화전 {H.J} m, 스프링클러 {S.J} m) → <b>{CP.J} m</b> ({CP.hHead} 기준 채택 · 공통 배관 F₀ {f3(X.Fc)} m 포함)<br/>
-                  ③ 유효수량 = {CP.maxMode?"max(":""}{f3(H.D)} {CP.maxMode?",":"+"} {f3(S.D)}{CP.maxMode?")":""} = {f3(CP.D)} m³ · 옥상수조 R = {CP.roofEx?"면제(단서)":`D ÷ 3 = ${f3(CP.R)} m³`} → <b>총 저수량 {f3(CP.Dt)} m³</b> (NFTC 102 2.9.1 · 2.1.2 · NFTC 103 2.13.1 · 2.1.2)<br/>
-                  ④ 배관 사용압력(체절압력) S = {CP.shutUser?"입력 체절압력":`${CP.J} × 0.0098 × 1.4 (정격 ${f3(CP.Pdis)})`} = <b>{f3(CP.Pshut)} MPa</b> — {CP.hiPress?(CP.pipePressOK?"1.2 MPa 이상 · KS D 3562 적합":"1.2 MPa 이상 · KS D 3562 · 3583 사용 또는 릴리프밸브로 1.2 MPa 미만 유지"):"1.2 MPa 미만"} (NFTC 102 2.3.1 · NFTC 103 2.5.1 · 소방청 해석 412390)<br/>
+                  ③ 유효수량 = {CP.maxMode?"max(":""}{f3(H.D)} {CP.maxMode?",":"+"} {f3(S.D)}{CP.maxMode?")":""} = {f3(CP.D)} m³ · 옥상수조 R = {CP.roofEx?`면제(${roofR?`단서 ${roofR.no} ${roofR.t}`:"단서 — 사유 미선택"}${roofBad?" — ⚠ 고층은 (2) · (3)만 면제":""})`:`D ÷ 3 = ${f3(CP.R)} m³`} → <b>총 저수량 {f3(CP.Dt)} m³</b> (NFTC 102 2.9.1 · 2.1.2 · NFTC 103 2.13.1 · 2.1.2{buildingFloor>1?" · NFTC 604 2.1.2 · 2.2.2":""})<br/>
+                  ④ 배관 사용압력(체절압력) S = {CP.shutUser?"입력 체절압력":`${CP.J} × 0.0098 × 1.4 (정격 ${f3(CP.Pdis)})`} = <b>{f3(CP.Pshut)} MPa</b> — {CP.hiPress?(CP.pipePressOK?"1.2 MPa 이상 · KS D 3562 적합":"1.2 MPa 이상 · KS D 3562 또는 KS D 3583 사용, 또는 릴리프밸브로 1.2 MPa 미만 유지"):"1.2 MPa 미만"} (NFTC 102 2.3.1 · NFTC 103 2.5.1 · 소방청 해석 412390)<br/>
                   <span style={{fontSize:10,color:"#475569"}}>⌞ 소화전: {H.A}개×130×{H.hWaterTime}÷1000 / 스프링클러: {S.A}개×{S.sWaterPer} m³ · 전양정 큰 값 채택과 안전율 10 % · 올림은 MANMIN 적용 · 참고값</span>
                 </div>
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:10,marginBottom:12,tableLayout:"fixed"}}>
@@ -1569,6 +1594,7 @@ function App(){
                 </table>
                 <div style={{textAlign:"center",fontSize:16,fontWeight:900,color:"#15803d",letterSpacing:"0.04em",borderTop:"1px solid #bbf7d0",paddingTop:12,fontFamily:"'JetBrains Mono','Pretendard Variable',Pretendard,'Noto Sans KR','Noto Sans KR Local',monospace"}}>
                   Q = {f3(CP.M)} ㎥/min &nbsp;×&nbsp; H = {CP.J} m &nbsp;×&nbsp; P = {CP.Php} HP
+                  {CP.hiRise&&<div className="mm-hirise-a4q" style={{fontSize:11,color:"#b91c1c",letterSpacing:0,marginTop:3}}>참고 계산 — 고층 겸용 불가(NFTC 604 2.1.3 · 2.2.3)</div>}
                 </div>
               </div>
             </div>
@@ -1576,9 +1602,9 @@ function App(){
             {/* 적용 법령 */}
             <div className="print-section" style={{padding:13,background:"#f8fafc",borderRadius:8,fontSize:11,color:"#6b7280",border:BD,lineHeight:1.9}}>
               <b style={{color:"#374151"}}>▣ 적용 법령 및 기준</b><br/>
-              ① 옥내소화전설비의 화재안전성능기준(NFPC 102) 소방청고시 제2025-25호(2026. 3. 1. 시행) · 화재안전기술기준(NFTC 102) 국립소방연구원공고 제2026-34호(2026. 7. 1. 시행) — 2.1.1 · 2.1.2 · 2.2.1.3 · 2.2.1.4 · 2.3.1 · 2.3.5 · 2.9.1 · 2.9.2<br/>
-              ② 스프링클러설비의 화재안전성능기준(NFPC 103) 소방청고시 제2025-25호(2026. 3. 1. 시행) · 화재안전기술기준(NFTC 103) 국립소방연구원공고 제2026-35호(2026. 7. 1. 시행) — 표 2.1.1.1 · 2.1.2 · 2.2.1.10 ~ 2.2.1.12 · 2.5.1 · 2.5.3.3 · 2.13.1 · 2.13.2<br/>
-              ③ 고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호 — 2.1.1 · 2.1.2 · 2.2.1 · 2.2.2 · 공동주택의 화재안전기술기준(NFTC 608) 공고 제2026-40호 — 2.3.1.1<br/>
+              ① 옥내소화전설비의 화재안전성능기준(NFPC 102) 소방청고시 제2025-25호(2026. 3. 1. 시행) 제4조 · 제5조 · 제6조 · 제12조 · 화재안전기술기준(NFTC 102) 국립소방연구원공고 제2026-34호(2026. 7. 1. 시행) — 2.1.1 · 2.1.2 · 2.2.1.3 · 2.2.1.4 · 2.3.1 · 2.3.5 · 2.9.1 · 2.9.2<br/>
+              ② 스프링클러설비의 화재안전성능기준(NFPC 103) 소방청고시 제2025-25호(2026. 3. 1. 시행) 제4조 · 제5조 · 제8조 · 제16조 · 화재안전기술기준(NFTC 103) 국립소방연구원공고 제2026-35호(2026. 7. 1. 시행) — 표 2.1.1.1 · 2.1.2 · 2.2.1.10 ~ 2.2.1.12 · 2.5.1 · 2.5.3.3 · 2.13.1 · 2.13.2<br/>
+              ③ 고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호 — 2.1.1 · 2.1.2 · 2.1.3 · 2.2.1 · 2.2.2 · 2.2.3 · 공동주택의 화재안전기술기준(NFTC 608) 공고 제2026-40호 — 2.3.1.1<br/>
               ④ 겸용: 수원 · 토출량은 각 설비 합 이상(단서 — 고정식 소화설비 2 이상 · 방화벽과 방화문 구획 시 최대값) · 전양정은 두 설비 중 큰 값(각 설비 성능에 지장이 없을 것 — NFTC 102 2.2.1.5 · NFTC 103 2.2.1.3)<br/>
               ⑤ 배관 마찰손실: Hazen-Williams 식 · 강관 내경 KS 외경 − 2 × 두께 · 안전율 10 % · 올림 · 호스 손실 · 관부속 상당길이 · K · η · C값은 MANMIN 참고값
             </div>
