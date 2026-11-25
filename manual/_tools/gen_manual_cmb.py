@@ -8,7 +8,7 @@
      고층건축물의 화재안전기술기준(NFTC 604) 공고 제2023-44호 2.1.1 ~ 2.1.4 · 2.1.7 · 2.2.1 ~ 2.2.3 · 2.2.9 · 공동주택(NFTC 608) 공고 제2026-40호 2.3.1.1
    v6.1.4(2026-11-24) 화면 대응: 옥상수조 면제 사유(NFTC 102 · 103 2.1.2 단서) · 최대값 단서 요건 안내 · 고층 참고 계산 표시 · KS D 3562 또는 3583 · 수직배관 50 mm · NFPC 조문 병기(웹 커밋 97e6822 · README)
    예제 수치는 캡처 때 앱 엔진(window.CMBENG.calc)으로 계산해 기록한 _example.json 에서 가져온다."""
-import os, sys, json, subprocess
+import re, os, sys, json, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from manual_engine import fig, T, render, B, MARKS
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -19,9 +19,10 @@ JS = r"""const fs=require('fs');const s=fs.readFileSync(process.argv[1],'utf8');
 const e=s.slice(a,s.indexOf('</script>',a));var window=globalThis;eval(e);console.log(JSON.stringify({PIPE_CONFIG,TRANS_TYPE,BASE_HEAD_TYPES,HOSE_TYPES}));"""
 D = json.loads(subprocess.check_output(['node', '-e', JS, APPHTML]))
 
-VER, REL, DATE = 'Ver-5.1', 'v6.1.4', '2026-10-16'
-UPD = '2026-11-24'   # v6.1.3 체절압력 · 입력값 경고 / v6.1.4 옥상수조 면제 사유 · 단서 요건 · 고층 참고 계산 · 조문 병기(교차검증 2026-11-23)
-PDF = '겸용펌프_사용자매뉴얼_Ver-5.1.pdf'
+VER, DATE = 'Ver-6.1', '2026-10-16'
+REL = 'v' + '.'.join(map(str, max(tuple(map(int, v.split('.'))) for v in re.findall(r'v(6\.\d+\.\d+)', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'sw.js'), encoding='utf-8').read()))))   # 도구 판 = sw.js 캐시 판(2026-11-25 Ver-6.1 표기 통일)
+UPD = '2026-11-25'   # Ver-6.1 표기 통일(판 이름 · PDF 이름 · 대상 프로그램 판), 내용 변경 없음 — 직전 개정 2026-11-24
+PDF = '겸용펌프_사용자매뉴얼_Ver-6.1.pdf'
 APP_URL = 'https://manminkim-eng.github.io/combo-pump-calc/'
 APP = '겸용 펌프 용량 계산서(옥내소화전 + 스프링클러)'
 APPS = '겸용 펌프 용량 계산서'
@@ -101,7 +102,7 @@ S_.append(f"""{EXTRA_CSS}<section class="ch" id="ch0"><h2><span class="n">00</sp
 {K(T([
  ['대상 프로그램', f'{APPS} <b>MANMIN {VER}</b>({REL}) — 탭 막대 「📘 매뉴얼」 버튼으로 이 문서가 열립니다'],
  ['접속 주소', f'<a href="{APP_URL}" target="_blank" rel="noopener">manminkim-eng.github.io/combo-pump-calc</a>'],
- ['매뉴얼 판', f'<b>{VER}</b> (화면 표기와 같은 판 번호, 초판 {DATE}) · 개정 {UPD} · 작성 김만민 건축사(㈜대성건축사사무소)'],
+ ['매뉴얼 판', f'<b>{VER}</b> (도구 판 6.1.x와 맞춘 판 번호, 초판 {DATE}) · 개정 {UPD} · 작성 김만민 건축사(㈜대성건축사사무소)'],
  ['내려받기', f'<a href="{PDF}" download>PDF(A4)</a> · <a href="../index.html">{APPS} 열기</a>'],
  ['예제', f'본문 그림은 예제 A(익산 업무시설 지상 9층 — 소화전 2개 + 헤드 10개)로 캡처했습니다 — <b>토출량 {X["Clpm"]:,} L/min · 총 저수량 {f3(X["Dt"])} m³ · 전양정 {X["J"]} m · {X["Php"]:g} HP</b>. 예제 B(29층 오피스텔 — 1.2 MPa · 감압) · C(판매시설 — 방화벽 구획 단서)는 <a href="#a2">부록 A2</a>'],
  ['근거 법령', f'{LAW} — LawMCP(국가법령정보센터) 원문 대조({DATE})'],
@@ -348,8 +349,9 @@ S_.append(f"""<section class="ch" id="ch7"><h2><span class="n">부록</span></h2
 <p>S는 배관 사용압력(펌프 체절압력 — 입력이 없으면 정격 × 1.4, v6.1.3)입니다. 예제 B만 1.2 MPa 이상이라 세 배관 모두 KS D 3562를 골랐습니다.</p>
 <h3 id="a3">A3. 버전 변경 내역</h3>
 {K(T([
- [f'Ver-5.1 · v6.1.4 ({UPD})', '교차검증 권장 · 권고 반영 — 옥상수조 면제를 사유로 선택(NFTC 102 · 103 2.1.2 단서 (1) ~ (5) · 가압수조, 고층은 (2) · (3)만 — 그 밖이면 경고, 계산서 ③에 사유) · 「최대값」 단서 요건 안내 · 고층건축물 「참고 계산 — 고층 겸용 불가」 표시(결과 · A4 첫머리 · Q × H × P) · 고층에서 「10층 이하」 기준개수 경고 · 「KS D 3562 또는 KS D 3583」 문구 · 옥내 배관 구경 40 · 50 mm 안내 · 적용 법령 NFPC 조문 병기 · 계산식 창 Ver-6.1 — 계산값 변경 없음, 예제 C 옥상수조 면제 사유 (4)'],
- [f'Ver-5.1 · v6.1.3 ({UPD})', '교차검증 반영 — 배관 사용압력을 체절압력 기준으로 판정(S-1 체절압력 입력, 없으면 정격 × 1.4 · 소방청 법령해석 412390 · 경계 전양정 88 m, 종전 123 m) · 입력값 경고(빈 값 · 0 · 음수 · 소수 · 상한 초과, 예제 A 「입력 3 → 적용 2개」) · 구간 1 유량 ≠ 토출량 「확인」 — 수원 · 토출량 · 전양정 · 동력 변경 없음, 예제 A · B · C 판정 같음'],
+ [f'Ver-6.1 · {REL} (2026-11-25)', '매뉴얼 판 표기 통일 — Ver-5.1 → Ver-6.1(도구 판 6.1.x와 맞춤) · PDF 이름 「…_Ver-6.1.pdf」 · 대상 프로그램 판 · 작성일 갱신 — 본문 · 계산 · 예제 변경 없음'],
+ ['Ver-6.1 · v6.1.4 (2026-11-24)', '교차검증 권장 · 권고 반영 — 옥상수조 면제를 사유로 선택(NFTC 102 · 103 2.1.2 단서 (1) ~ (5) · 가압수조, 고층은 (2) · (3)만 — 그 밖이면 경고, 계산서 ③에 사유) · 「최대값」 단서 요건 안내 · 고층건축물 「참고 계산 — 고층 겸용 불가」 표시(결과 · A4 첫머리 · Q × H × P) · 고층에서 「10층 이하」 기준개수 경고 · 「KS D 3562 또는 KS D 3583」 문구 · 옥내 배관 구경 40 · 50 mm 안내 · 적용 법령 NFPC 조문 병기 · 계산식 창 Ver-6.1 — 계산값 변경 없음, 예제 C 옥상수조 면제 사유 (4)'],
+ ['Ver-6.1 · v6.1.3 (2026-11-24)', '교차검증 반영 — 배관 사용압력을 체절압력 기준으로 판정(S-1 체절압력 입력, 없으면 정격 × 1.4 · 소방청 법령해석 412390 · 경계 전양정 88 m, 종전 123 m) · 입력값 경고(빈 값 · 0 · 음수 · 소수 · 상한 초과, 예제 A 「입력 3 → 적용 2개」) · 구간 1 유량 ≠ 토출량 「확인」 — 수원 · 토출량 · 전양정 · 동력 변경 없음, 예제 A · B · C 판정 같음'],
  ['Ver-5.1 · v5.1.12 (2026-11-09)', '「🏢 건물개요」 저장 · 불러오기 — 공사명 · 설계자을(를) 다른 MANMIN 도구와 공유, 파일 내보내기 · 가져오기(공통 원본 MM-PROJECT v1.2, 계산 변경 없음)'],
  [f'Ver-5.1 · v5.1.0 ({DATE})', 'NFPC 102 · 103 · NFTC 102 · 103 · 604 원문 대조 근거 정정, 배관 마찰손실 ×100 정정, 공통 배관, 기준개수 표 원문 · 설치개수, 옥상수조, 방화벽 구획 단서, KS 강관 내경, 압력 판정, 고층건축물 겸용 불가 경고, 계산 엔진 단일화, 「📘 매뉴얼」 · 사용자 매뉴얼(<a href="#s4-9">4-9</a>)'],
  ['Ver-5.0 (2026-09)', 'MANMIN 디자인 통일(헤더 · 탭 · 요약 바 · A4 · JPG 저장), PWA'],
